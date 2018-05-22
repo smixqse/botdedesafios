@@ -4,7 +4,7 @@ var fs = require("fs");
 var bot = new Discord.Client({ presence: { activity: { type: "WATCHING", name: "o canal do Core!" } } });
 bot.commands = new Enmap();
 bot.config = require("./config.json");
-var cooldown = new Set();
+var cooldown = new Enmap();
 bot.utils = require("./utils");
 
 // Manter o bot ligado no Glitch
@@ -35,6 +35,15 @@ fs.readdir("./commands/", (err, files) => {
 
 bot.on("message", message => {
     if (message.author.bot) return;
+    if (slowmode.has(message.channel.id)) {
+      const time = slowmode.get(message.channel.id);
+      const user = message.member;
+      const role = bot.roles.get("448291438887698432");
+      user.addRole(role)
+      setTimeout(() => {
+        user.removeRole(role);
+        }, time);
+    }
     if (message.guild.id != bot.config.guild) return;
     if (!message.content.split(" ")[0].startsWith(bot.config.prefix)) return;
     let command = message.content.split(" ")[0].slice(bot.config.prefix.length);

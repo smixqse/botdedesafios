@@ -4,7 +4,7 @@ var fs = require("fs");
 var bot = new Discord.Client({ presence: { activity: { type: "WATCHING", name: "o canal do Core!" } } });
 bot.commands = new Enmap();
 bot.config = require("./config.json");
-var cooldown = new Enmap();
+var cooldown = new Set();
 var slowmode = new Enmap();
 bot.utils = require("./utils");
 

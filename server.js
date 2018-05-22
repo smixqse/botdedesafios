@@ -5,6 +5,7 @@ var bot = new Discord.Client({ presence: { activity: { type: "WATCHING", name: "
 bot.commands = new Enmap();
 bot.config = require("./config.json");
 var cooldown = new Enmap();
+var slowmode = new Enmap();
 bot.utils = require("./utils");
 
 // Manter o bot ligado no Glitch
@@ -54,7 +55,7 @@ bot.on("message", message => {
     if (cooldown.has(message.author.id)) return;
     cooldown.add(message.author.id);
     setTimeout(() => {cooldown.delete(message.author.id);}, 3000);
-    cmd.run(Discord, bot, message, args);
+    cmd.run(Discord, bot, message, args, slowmode);
 })
 
 bot.login(process.env.TOKEN).then(() => {console.log("[Info] Logado com sucesso!");}).catch(() => {console.log("[Info] O bot não pôde logar."); process.exit();});

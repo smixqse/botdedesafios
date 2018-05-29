@@ -6,7 +6,7 @@ exports.run = (Discord, bot, message, args) => {
     var guildMember = message.guild.members.get(message.author.id);
     var rolesCollection = message.guild.roles.filter(role => role.name.split(" ")[0] == "Cor" && role.name.includes("(Ex)")).array();
     var letters = getLetters();
-    if (guildMember.roles.has(bot.config.sponsorsRole) || message.member.hasPermission("KICK_MEMBERS")) {
+    if (guildMember.roles.some(role => bot.config.specialRoles.includes(role.id)) || message.member.hasPermission("KICK_MEMBERS")) {
         var embedToSend = new Discord.MessageEmbed()
             .setTitle("Escreva no chat a letra da cor especial que deseja para si mesmo.")
             .setFooter(bot.user.username, bot.user.displayAvatarURL())

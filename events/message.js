@@ -7,6 +7,7 @@ module.exports = (Discord, bot, message) => {
     let args = message.content.split(" ").slice(1);
     const cmd = bot.commands.get(command);
     if (!cmd) return;
+    if ((cmd.only != null && !cmd.only.includes(message.channel.name.toLowerCase())) || (bot.config.defaultOnlyChannels != null && !bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase()))) return;
     if (cooldown.has(message.author.id)) message.channel.send("<@" + message.author.id + "> Aguarde 3 segundos pra usar comandos novamente.");
     if (cooldown.has(message.author.id)) return;
     cooldown.add(message.author.id);

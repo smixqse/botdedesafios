@@ -1,3 +1,4 @@
+/* global Set */
 var Discord = require("discord.js");
 var Enmap = require("enmap");
 var fs = require("fs");

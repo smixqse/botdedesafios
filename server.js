@@ -2,11 +2,13 @@
 var Discord = require("discord.js");
 var Enmap = require("enmap");
 var fs = require("fs");
-var bot = new Discord.Client({ presence: { activity: { type: "WATCHING", name: "o canal do Core!" } } });
+var bot = new Discord.Client({ presence: { status: "online", activity: { type: "WATCHING", name: "os vídeos do Core!" } } });
+const presences = [["WATCHING", "os vídeos do Core!"], ["WATCHING", "as lives do Core no Facebook: fb.gg/Core"], ["LISTENING", "o Core falar \"Meu Deus do céu!\""], ["PLAYING", "com o SMixqse, meu criador!"], ["LISTENING", "os gritos do Core!"], ["WATCHING", "o Core pistolar!"]];
 bot.commands = new Enmap();
 bot.config = require("./config.json");
-var cooldown = new Set();
+bot.colorRoles = new Enmap();
 bot.utils = require("./utils");
+global.rolemention = {roleID: false, author: false};
 
 // Manter o bot ligado no Glitch
 const http = require('http');
@@ -19,7 +21,14 @@ app.get("/", (request, response) => {
 app.listen(process.env.PORT);
 setInterval(() => {
     http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
-}, 280000);
+}, 277000);
+
+bot.on("ready", ready => {
+    bot.setInterval(() => {
+    	let presence = presences[Math.floor(Math.random() * presences.length)];
+    	bot.user.setActivity(presence[1], {type:presence[0]});
+    }, 300000)
+})
 
 fs.readdir("./commands/", (err, files) => {
     console.log("[Info] Carregando comandos...");

@@ -1,0 +1,10 @@
+{
+  "prefix": "g.", 
+ "specialRoles": ["462030427960377344"], 
+ "memberRole":"463297338149175297", 
+ "gameRole": "463291315929481223", 
+ "guild": "420378219854823424", 
+ "owners":["205319106608627722"], 
+ "defaultOnlyChannels": ["casa-dos-bots", "casa-staffer-dos-bots", "bots-patrocinadores"], 
+ "botRole": "420623469756022805"
+}

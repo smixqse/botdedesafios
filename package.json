@@ -10,9 +10,12 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "discord.js": "github:hydrabolt/discord.js",
-    "enmap": "^2.4.0",
-    "express": "^4.16.2"
+    "discord.js": "github:discordjs/discord.js",
+    "enmap": "^2.4.1",
+    "express": "^4.16.2",
+    "set": "^1.1.1",
+    "imgur": "^0.2.1",
+    "node-vibrant": "^3.1.1"
   },
   "engines": {
     "node": "8.x"

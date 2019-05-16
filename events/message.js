@@ -5,11 +5,11 @@ module.exports = (Discord, bot, message) => {
     if (message.channel.type == "dm") return;
     if (message.guild.id != bot.config.guild) return;
     if (message.author.id == global.rolemention.author) {
-      let role = message.guild.roles.resolve(global.rolemention.roleID)
+      let role = message.guild.roles.resolve(global.rolemention.roleID);
       if(message.mentions.has(role)) {
         role.setMentionable(false, "Pedido por staffer automaticamente.");
         global.rolemention.roleID = false;
-        global.rolemention.author = false;
+        global.rolemention.author.id = "nada";
       }
     }
     if (!message.content.split(" ")[0].startsWith(bot.config.prefix)) return;

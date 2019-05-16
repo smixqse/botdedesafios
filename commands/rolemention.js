@@ -1,4 +1,4 @@
-exports.aliases = ["rolemention", "mentionrole"];
+exports.aliases = ["rolemention", "mentionrole", "rm", "mention"];
 exports.description = "Ativa e desativa menções de um cargo rapidamente. (APENAS STAFFERS)";
 exports.example = "Gatuno dos Games";
 exports.run = (Discord, bot, message, args) => {
@@ -8,10 +8,11 @@ exports.run = (Discord, bot, message, args) => {
     let cancel = args[0] == "cancel";
     if (cancel && global.rolemention.roleID === false) message.channel.send(bot.utils.mention(message.author.id) + "Não há cargos pendentes.");;
     if (cancel && global.rolemention.roleID === false) return;
+    if (cancel) message.guild.roles.resolve(global.rolemention.roleID).setMentionable(false, "Pedido por um staffer.");
     if (cancel) message.channel.send(bot.utils.mention(message.author.id) + "O cargo deixou de ser mencionável.");
     if (cancel) global.rolemention = {roleID: false, author: false};
     if (cancel) return;
-    let role = message.guild.roles.find(role => role.name.toLowerCase() == args.join(" ").toLowerCase());
+    let role = message.guild.roles.find(role => role.name.replace("+", "").toLowerCase() == args.join(" ").toLowerCase());
     if (!role) message.channel.send(bot.utils.mention(message.author.id) + "Esse cargo não existe. Escreva o nome do cargo corretamente. (não diferencia letras maiúsculas de minúsculas)");
     if (!role) return;
     role.setMentionable(true, "Feito por um staffer usando o bot do server para mencionar o cargo em algum lugar.");

@@ -9,7 +9,7 @@ exports.run = (Discord, bot, message, args) => {
   function removeAccents(text) {
     return text.replace("á", "a").replace("é", "e").replace("í","i").replace("ó", "o").replace("ú", "u").replace("ã", "a");
   };
-  var colorRoles = message.guild.roles.filter(r => r.name.includes("Cor "));
+  var colorRoles = message.guild.roles.cache.filter(r => r.name.includes("Cor "));
   function removeFirstWord(text) {return text.split(" ").slice(1).join(" ")};
   var search = args.join(" ").toLowerCase();
   switch (search) {
@@ -39,7 +39,7 @@ exports.run = (Discord, bot, message, args) => {
             function removeDuplicates(num){var x,len=num.length,out=[],obj={};for(x=0;x<len;x+=1){obj[num[x]]=0}for(x in obj){out.push(x)}return out}
             var rolesFromColor = [colorRoles.filter(r => r.hexColor == `#${vibrant}`).first(), colorRoles.filter(r => r.hexColor == `#${darkVibrant}`).first(), colorRoles.filter(r => r.hexColor == `#${lightVibrant}`).first(), colorRoles.filter(r => r.hexColor == `#${lightMuted}`).first()];
             msg.edit(" ", new Discord.MessageEmbed()
-                                              .setColor(message.guild.roles.resolve(bot.config.botRole).hexColor)
+                                              .setColor(message.guild.roles.cache.get(bot.config.botRole).hexColor)
                                               .setAuthor(message.author.username, image)
                                               .setFooter(bot.user.username, bot.user.displayAvatarURL())
                                               .setDescription(`Algumas destas cores podem combinar com o seu avatar: \n${removeDuplicates(rolesFromColor).join(", ")}.`));
@@ -51,7 +51,7 @@ exports.run = (Discord, bot, message, args) => {
     default:
       if (args.length < 1) {
         if (!readOnly) {message.channel.send(new Discord.MessageEmbed()
-                                              .setColor(message.guild.roles.resolve(bot.config.botRole).hexColor)
+                                              .setColor(message.guild.roles.cache.get(bot.config.botRole).hexColor)
                                               .setAuthor(message.author.username, message.author.displayAvatarURL())
                                               .setTitle("Cores Disponíveis")
                                               .setFooter(bot.user.username, bot.user.displayAvatarURL())
@@ -63,7 +63,7 @@ exports.run = (Discord, bot, message, args) => {
           if (!readOnly) reply("Nenhum cargo pôde ser encontrado. Execute o comando sem argumentos para ver uma lista de cores disponíveis.");
         } else {
           var role = results[0];
-          if (message.member.roles.some(r => r == role)) {
+          if (message.member.roles.cache.some(r => r == role)) {
             if (!readOnly) reply(`Você já tem o cargo \`${removeFirstWord(role.name)}\`.`);
           } else {
             message.member.roles.remove(colorRoles, "Comando de cor.").then(() => message.member.roles.add(role, "Comando de cor."));

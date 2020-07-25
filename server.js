@@ -1,9 +1,10 @@
 /* global Set */
 var Discord = require("discord.js");
+require("dotenv").config();
 var Enmap = require("enmap");
 var fs = require("fs");
 var bot = new Discord.Client({ presence: { status: "online", activity: { type: "WATCHING", name: "os vídeos do Core!" } } });
-const presences = [["WATCHING", "os vídeos do Core!"], ["WATCHING", "as lives do Core no Facebook: fb.gg/Core"], ["LISTENING", "o Core falar \"Meu Deus do céu!\""], ["PLAYING", "com o SMixqse, meu criador!"], ["LISTENING", "os gritos do Core ao jogar jogos eletrônicos!"], ["WATCHING", "o Core pistolar!"]];
+const presences = [["WATCHING", "os vídeos do Core!"], ["WATCHING", "as lives do Core!"], ["LISTENING", "o Core falar \"Meu Deus do céu!\""], ["PLAYING", "com o SMixqse, meu criador!"], ["LISTENING", "os gritos do Core ao jogar jogos eletrônicos!"], ["WATCHING", "o Core pistolar!"]];
 bot.commands = new Enmap();
 bot.config = require("./config.json");
 bot.colorRoles = new Enmap();

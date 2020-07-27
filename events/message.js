@@ -4,14 +4,20 @@ module.exports = (Discord, bot, message) => {
     if (message.author.bot) return;
     if (message.channel.type == "dm") return;
     if (message.guild.id != bot.config.guild) return;
+
+    // Rolemention
     if (message.author.id == global.rolemention.author) {
-      let role = message.guild.roles.cache.get(global.rolemention.roleID);
-      if(message.mentions.has(role)) {
-        role.setMentionable(false, "Pedido por staffer automaticamente.");
-        global.rolemention.roleID = false;
-        global.rolemention.author.id = "nada";
-      }
-    }
+        let role = message.guild.roles.cache.get(global.rolemention.roleID);
+        if (message.mentions.has(role)) {
+            role.setMentionable(false, "Pedido por staffer automaticamente.");
+            global.rolemention.roleID = false;
+            global.rolemention.author.id = "nada";
+        }
+    };
+
+    
+
+    // Commands
     if (!message.content.split(" ")[0].startsWith(bot.config.prefix)) return;
     let command = message.content.split(" ")[0].slice(bot.config.prefix.length);
     let args = message.content.split(" ").slice(1);
@@ -22,7 +28,9 @@ module.exports = (Discord, bot, message) => {
         message.delete();
         if (cooldown.has(message.author.id)) return;
         cooldown.add(message.author.id);
-        setTimeout(() => { cooldown.delete(message.author.id); }, 5000);
+        setTimeout(() => {
+            cooldown.delete(message.author.id);
+        }, 5000);
         cmd.run(Discord, bot, message, args);
     };
 }

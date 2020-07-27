@@ -7,6 +7,7 @@ var bot = new Discord.Client({ presence: { status: "online", activity: { type: "
 const presences = [["WATCHING", "os vídeos do Core!"], ["WATCHING", "as lives do Core!"], ["LISTENING", "o Core falar \"Meu Deus do céu!\""], ["PLAYING", "com o SMixqse, meu criador!"], ["LISTENING", "os gritos do Core ao jogar jogos eletrônicos!"], ["WATCHING", "o Core pistolar!"]];
 bot.commands = new Enmap();
 bot.config = require("./config.json");
+bot.imgsDb = require("./db/imgs.json")
 bot.utils = require("./utils");
 global.rolemention = {roleID: false, author: false};
 

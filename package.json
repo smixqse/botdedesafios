@@ -15,8 +15,6 @@
     "dotenv": "^8.2.0",
     "enmap": "^2.4.1",
     "express": "^4.16.2",
-    "imghash": "0.0.7",
-    "leven": "^3.1.0",
     "moment": "^2.27.0",
     "node-vibrant": "^3.1.1",
     "set": "^1.1.1"

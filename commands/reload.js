@@ -1,7 +1,7 @@
 var fs = require('fs');
 exports.aliases = ["reload", "recarregar", "cmdr", "resetcmd"];
 exports.description = "Usado para recarregar arquivos de comandos.";
-exports.run = (Discord, bot, message, args) => {
+exports.run = (bot, message, args) => {
     if (!bot.config.owners.includes(message.author.id)) return;
     if (!args || args.size < 1) message.channel.send(bot.utils.mention(message.author.id) + "Escreva um comando pra recarregar.");
     const commandName = args[0];

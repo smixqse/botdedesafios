@@ -1,6 +1,9 @@
+const Discord = require("discord.js");
+
 exports.aliases = ["format", "formatar", "mentions"];
 exports.description = "Formata textos com menções de usuário, cargo e canal.";
-exports.run = (Discord, bot, message, args) => {
+
+exports.run = (bot, message, args) => {
   var readOnly  = !bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase());
   var mention = bot.utils.mention(message.author.id);
   function reply(msg) {message.channel.send(`${mention}${msg}`);}

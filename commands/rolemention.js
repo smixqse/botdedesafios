@@ -1,7 +1,7 @@
 exports.aliases = ["rolemention", "mentionrole", "rm", "mention"];
 exports.description = "Ativa e desativa menções de um cargo rapidamente. (APENAS STAFFERS)";
 exports.example = "Gatuno dos Games";
-exports.run = (Discord, bot, message, args) => {
+exports.run = (bot, message, args) => {
     if (!message.member.hasPermission("KICK_MEMBERS")) return;
     if (!args || args.length < 1) message.channel.send(bot.utils.mention(message.author.id) + "Digite o nome de algum cargo.");
     if (!args || args.length < 1) return;

@@ -1,4 +1,3 @@
-/* global Set */
 var Discord = require("discord.js");
 require("dotenv").config();
 var Enmap = require("enmap");
@@ -7,7 +6,12 @@ var bot = new Discord.Client({ presence: { status: "online", activity: { type: "
 const presences = [["WATCHING", "os vídeos do Core!"], ["WATCHING", "as lives do Core!"], ["LISTENING", "o Core falar \"Meu Deus do céu!\""], ["PLAYING", "com o SMixqse, meu criador!"], ["LISTENING", "os gritos do Core ao jogar jogos eletrônicos!"], ["WATCHING", "o Core pistolar!"]];
 bot.commands = new Enmap();
 bot.config = require("./config.json");
-bot.imgsDb = require("./db/imgs.json")
+bot.imgsDb = new Enmap({
+    name: "savedMedia",
+    fetchAll: false,
+    dataDir: "./db",
+    pollingInterval: 3000
+});
 bot.utils = require("./utils");
 global.rolemention = {roleID: false, author: false};
 
@@ -51,7 +55,7 @@ fs.readdir("./events/", (err, files) => {
         if (!file.endsWith(".js")) return;
         const event = require(`./events/${file}`);
         let eventName = file.split(".")[0];
-        bot.on(eventName, event.bind(null, Discord, bot));
+        bot.on(eventName, event.bind(null, bot));
         delete require.cache[require.resolve(`./events/${file}`)];
     })
     console.log("[Info] Eventos carregados!");

@@ -1,6 +1,6 @@
 exports.aliases = ["role", "cargo", "add", "newrole", "addrole", "addcargo", "removerole", "remcargo"];
 exports.description = "Adicione novos cargos a si mesmo.";
-exports.run = (Discord, bot, message, args) => {
+exports.run = (bot, message, args) => {
   var mention = bot.utils.mention(message.author.id);
   function reply(msg) {message.channel.send(`${mention}${msg}`);}
   var prefix = "+";

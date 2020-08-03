@@ -1,6 +1,9 @@
+const Discord = require("discord.js");
+
 exports.aliases = ["help", "ajuda"];
 exports.description = "Comando de ajuda.";
-exports.run = (Discord, bot, message, args) => {
+
+exports.run = (bot, message, args) => {
     var fs = require("fs");
     let embed = new Discord.MessageEmbed()
                 .setTitle("Comandos disponíveis")

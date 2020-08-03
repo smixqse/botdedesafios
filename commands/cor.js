@@ -1,8 +1,9 @@
 var Vibrant = require("node-vibrant");
+const Discord = require("discord.js");
 exports.aliases = ["cor", "cores", "color"];
 exports.description = "Te dá uma cor para enfeitar o seu nome.";
 exports.only = ["all"];
-exports.run = (Discord, bot, message, args) => {
+exports.run = (bot, message, args) => {
   var readOnly  = !bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase());
   var mention = bot.utils.mention(message.author.id);
   function reply(msg) {message.channel.send(`${mention}${msg}`);}

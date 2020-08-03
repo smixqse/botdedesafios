@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "better-sqlite-pool": "^0.3.0",
     "discord.js": "github:discordjs/discord.js",
     "dotenv": "^8.2.0",
-    "enmap": "^2.4.1",
+    "enmap": "^5.4.1",
     "express": "^4.16.2",
     "moment": "^2.27.0",
     "node-vibrant": "^3.1.1",

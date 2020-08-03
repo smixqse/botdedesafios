@@ -1,11 +1,12 @@
 /* global Set */
 var cooldown = new Set();
+const Discord = require("discord.js");
 const axios = require("axios");
 const crypto = require("crypto");
 const moment = require("moment");
 moment.locale("pt-br");
 
-module.exports = (Discord, bot, message) => {
+module.exports = (bot, message) => {
     if (message.author.bot) return;
     if (message.channel.type == "dm") return;
     if (message.guild.id != bot.config.guild) return;
@@ -23,6 +24,7 @@ module.exports = (Discord, bot, message) => {
     // Repeated attachment prevention
     if (message.channel.name === "memes") {
         setTimeout(async() => {
+            await bot.imgsDb.defer;
             message = await message.fetch();
             var attachment = {};
             if (message.attachments.size < 1) {
@@ -47,11 +49,10 @@ module.exports = (Discord, bot, message) => {
                 cryptoHash.write(resp.data);
                 cryptoHash.end();
                 const hash = cryptoHash.read().toString("hex");
-                var existsHash = false;
-                if (bot.imgsDb[hash]) existsHash = true;
+                var existsHash = bot.imgsDb.has(hash);
                 if (existsHash) {
                     try {
-                        var originalMsg = await message.channel.messages.fetch(bot.imgsDb[hash]);
+                        var originalMsg = await message.channel.messages.fetch(bot.imgsDb.get(hash));
                         var author = originalMsg.author;
                         message.delete();
                         var embed = new Discord.MessageEmbed();
@@ -70,12 +71,10 @@ module.exports = (Discord, bot, message) => {
                             timeout: 15000
                         });
                     } catch (e) {
-                        bot.imgsDb[hash] = message.id;
-                        require("fs").writeFileSync("./db/imgs.json", JSON.stringify(bot.imgsDb));
+                        bot.imgsDb.set(hash, message.id);
                     }
                 } else {
-                    bot.imgsDb[hash] = message.id;
-                    require("fs").writeFileSync("./db/imgs.json", JSON.stringify(bot.imgsDb));
+                    bot.imgsDb.set(hash, message.id);
                 }
             });
         }, 2000);
@@ -89,13 +88,13 @@ module.exports = (Discord, bot, message) => {
     const cmd = bot.commands.get(command);
     if (!cmd) return;
     if ((cmd.only != null && cmd.only.includes(message.channel.name.toLowerCase())) || (cmd.only != null && cmd.only[0] == "all") || (bot.config.defaultOnlyChannels != null && bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase()))) {
-        if (cooldown.has(message.author.id) && bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase())) message.channel.send("<@" + message.author.id + "> Espere alguns segundos pra usar comandos novamente.");
+        if ((cooldown.has(message.author.id) && bot.config.defaultOnlyChannels.includes(message.channel.name.toLowerCase())) && !bot.config.owners.includes(message.author.id)) message.channel.send("<@" + message.author.id + "> Espere alguns segundos pra usar comandos novamente.");
         message.delete();
-        if (cooldown.has(message.author.id)) return;
+        if (cooldown.has(message.author.id) && !bot.config.owners.includes(message.author.id)) return;
         cooldown.add(message.author.id);
         setTimeout(() => {
             cooldown.delete(message.author.id);
         }, 5000);
-        cmd.run(Discord, bot, message, args);
+        cmd.run(bot, message, args);
     };
 }

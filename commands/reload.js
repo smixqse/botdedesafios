@@ -1,4 +1,4 @@
-var fs = require("fs");
+const fs = require("fs");
 exports.aliases = ["reload", "recarregar", "cmdr", "resetcmd"];
 exports.description = "Usado para recarregar arquivos de comandos.";
 exports.run = (bot, message, args) => {

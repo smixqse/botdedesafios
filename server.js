@@ -1,8 +1,8 @@
-var Discord = require("discord.js");
+const Discord = require("discord.js");
 require("dotenv").config();
-var Enmap = require("enmap");
-var fs = require("fs");
-var bot = new Discord.Client({
+const Enmap = require("enmap");
+const fs = require("fs");
+const bot = new Discord.Client({
   presence: {
     status: "online",
     activity: { type: "WATCHING", name: "os vídeos do Core!" }

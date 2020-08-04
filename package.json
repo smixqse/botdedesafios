@@ -1,11 +1,9 @@
 {
-  "//1": "describes your app and its dependencies",
-  "//2": "https://docs.npmjs.com/files/package.json",
-  "//3": "updating this file will download and update your packages",
   "name": "botdocore",
-  "version": "0.0.1",
+  "version": "1.0",
   "description": "Bot do server do Core feito em Discord.js",
   "main": "server.js",
+  "author": "smixqse",
   "scripts": {
     "start": "node server.js"
   },
@@ -21,16 +19,16 @@
     "set": "^1.1.1"
   },
   "engines": {
-    "node": "8.x"
+    "node": "12.x"
   },
   "repository": {
-    "url": "https://glitch.com/edit/#!/welcome-project"
+    "url": "https://github.com/smixqse/botdocore.git"
   },
   "license": "MIT",
   "keywords": [
     "node",
-    "glitch",
-    "express",
-    "discord.js"
+    "core",
+    "bot",
+    "discord"
   ]
 }

@@ -5,11 +5,11 @@ Ao fazer pull requests de comandos, siga o exemplo [neste arquivo](https://githu
 Para adicionar novos eventos em pull requests, crie um novo arquivo em /events/ com o nome do arquivo sendo o nome do evento (Ex.: guildMemberAdd.js, messageReactionAdd.js) e coloque isso.
 
 ```js
-module.exports = (Discord, bot, [...]) => {
+module.exports = (bot, [...]) => {
     // O código vem aqui.
 };
 ```
 
-Substitua `[...]` por argumentos que o evento precisa. Ex.: `(module.exports = (Discord, bot, messageReaction, user) => {})` (para o evento messageReactionAdd)
+Substitua `[...]` por argumentos que o evento precisa. Ex.: `(module.exports = (bot, messageReaction, user) => {})` (para o evento messageReactionAdd)
 
 Se o arquivo já existe, apenas adicione código nele.

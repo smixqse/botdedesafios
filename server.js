@@ -27,19 +27,6 @@ bot.imgsDb = new Enmap({
 bot.utils = require("./utils");
 global.rolemention = { roleID: false, author: false };
 
-// Manter o bot ligado no Glitch
-/*const http = require('http');
-const express = require('express');
-const app = express();
-app.get("/", (request, response) => {
-    console.log(Date.now() + " Ping Recebido");
-    response.sendStatus(200);
-});
-app.listen(process.env.PORT);
-setInterval(() => {
-    http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
-}, 277000);*/
-
 bot.on("ready", (ready) => {
   bot.setInterval(() => {
     let presence = presences[Math.floor(Math.random() * presences.length)];

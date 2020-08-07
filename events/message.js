@@ -4,6 +4,7 @@ const Discord = require("discord.js");
 const axios = require("axios");
 const crypto = require("crypto");
 const moment = require("moment");
+const { ENGINE_METHOD_PKEY_ASN1_METHS } = require("constants");
 moment.locale("pt-br");
 
 module.exports = (bot, message) => {
@@ -20,7 +21,7 @@ module.exports = (bot, message) => {
       global.rolemention.author.id = "nada";
     }
   }
-
+  
   // Repeated attachment prevention
   if (message.channel.name === "memes") {
     setTimeout(async () => {
@@ -72,6 +73,7 @@ module.exports = (bot, message) => {
               var sentMsg = await message.channel.send({
                 embed
               });
+
               embed.setTitle(
                 "Mídia possivelmente duplicada apagada no canal de memes"
               );
@@ -90,6 +92,401 @@ module.exports = (bot, message) => {
           }
         });
     }, 2000);
+  }
+
+  // Mini chat events
+  if (
+    (Math.floor(Math.random() * 25) === 2 &&
+      Math.floor(Math.random() * 2) === 0 &&
+      message.channel.name === "geral" &&
+      message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES") &&
+      !bot.eventRunning) ||
+    (message.content.startsWith("ativar evento") &&
+      bot.config.owners.includes(message.author.id))
+  ) {
+    const eventEnded = () => {
+      bot.eventRunning = false;
+    };
+    const updatePoints = function (amount, ...users) {
+      for (user of users) {
+        bot.points.ensure(user.id, { user: user.id, points: 0 });
+        bot.points.math(user.id, "+", amount, "points");
+      }
+      eventEnded();
+    };
+    bot.eventRunning = true;
+    const events = {
+      math: async () => {
+        const numbers = [
+          Math.floor(Math.random() * 300),
+          Math.floor(Math.random() * 300)
+        ];
+        const result = numbers[0] + numbers[1];
+        var eventMsg = await message.channel.send(
+          `🎉 | Valendo 30 pontos, rápido: quanto é ${numbers[0]} + ${numbers[1]}?`
+        );
+        message.channel
+          .awaitMessages((msg) => msg.content === result.toString(), {
+            max: 1,
+            time: 15000,
+            errors: ["time"]
+          })
+          .then(async (msgs) => {
+            const winner = msgs.first().author;
+            const winnerMsg = await message.channel.send(
+              `🎉 | ${winner} acertou primeiro e ganhou 30 pontos.`
+            );
+            updatePoints(30, winner);
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 40
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+              );
+            }, 2000);
+            eventMsg.delete();
+          })
+          .catch(async (e) => {
+            const winnerMsg = await message.channel.send(
+              `🎉 | Vocês demoraram muito. A resposta era ${result}.`
+            );
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 40
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+              );
+            }, 2000);
+            eventMsg.delete();
+            setTimeout(
+              () =>
+                winnerMsg.edit(
+                  "🎉 | Aqui aconteceu um evento que ninguém ganhou."
+                ),
+              10000
+            );
+            eventEnded();
+          });
+      },
+      luckyNumber: async () => {
+        const number = Math.floor(Math.random() * 10).toString();
+        var eventMsg = await message.channel.send(
+          `🎉 | Valendo 50 pontos, digite seu número da sorte entre 0 e 9, e daqui a pouco sortearemos.`
+        );
+        message.channel
+          .awaitMessages((msg) => !isNaN(msg.content), {
+            time: 10000,
+            errors: ["time"]
+          })
+          .catch(async (msgs) => {
+            var processedUsers = [];
+            var winners = [];
+            msgs.forEach(async (msg) => {
+              if (processedUsers.includes(msg.author.id)) return;
+              if (msg.content === number) {
+                winners.push(msg.author);
+              }
+              processedUsers.push(msg.author.id);
+            });
+            var msgToSend;
+            if (winners.length < 1) {
+              msgToSend = `🎉 | Ninguém ganhou! O número era ${number}.`;
+            } else {
+              var single = winners.length === 1;
+              msgToSend = `🎉 | ${winners.join(", ")} ${
+                single ? "é" : "são"
+              } o${single ? "" : "s"} ganhador${
+                single ? "" : "es"
+              }! O número era ${number}.`;
+            }
+            updatePoints(50, ...winners);
+            const winnerMsg = await message.channel.send(msgToSend);
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 40
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+              );
+            }, 1000);
+            eventMsg.delete();
+          });
+      },
+      reaction: async () => {
+        const emojis = ["😳", "😄", "🥺", "😭", "😔", "😍", "🦧"];
+        var emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        var eventMsg = await message.channel.send(
+          `🎉 | O primeiro que reagir a esta mensagem com ${emoji} ganha 50 pontos.`
+        );
+        eventMsg
+          .awaitReactions((rea) => rea.emoji.name === emoji, {
+            max: 1,
+            time: 15000,
+            errors: ["time"]
+          })
+          .then(async (reas) => {
+            const winner = reas.first().users.cache.first();
+            const winnerMsg = await message.channel.send(
+              `🎉 | ${winner} reagiu primeiro.`
+            );
+            updatePoints(50, winner);
+            eventMsg.delete();
+          })
+          .catch(async (e) => {
+            const winnerMsg = await message.channel.send(
+              "🎉 | Vocês demoraram muito pra reagir."
+            );
+            eventMsg.delete();
+            setTimeout(
+              () =>
+                winnerMsg.edit(
+                  "🎉 | Aqui aconteceu um evento que ninguém ganhou."
+                ),
+              10000
+            );
+            eventEnded();
+          });
+      },
+      fastType: async () => {
+        const blank = "‎";
+        const firstPartsMasc = [
+          "um empresário",
+          "um veterinário",
+          "um gamer",
+          "um pastor",
+          "um fazendeiro",
+          "um médico",
+          "um enfermeiro",
+          "um preguiçoso",
+          "um homem comum",
+          "um cachorro",
+          "um gato",
+          "um artista"
+        ];
+        const firstPartsFem = [
+          "uma empresária",
+          "uma veterinária",
+          "uma gamer",
+          "uma pastora",
+          "uma fazendeira",
+          "uma médica",
+          "uma enfermeira",
+          "uma preguiçosa",
+          "uma mulher comum",
+          "uma gata",
+          "uma artista"
+        ];
+        const namesMasc = [
+          "Roberto",
+          "Rogério",
+          "Cristiano",
+          "Alexandre",
+          "Lucas",
+          "Leonardo",
+          "Cebolinha",
+          "Core",
+          "Carlos",
+          "Luciano"
+        ];
+        const namesFem = [
+          "Roberta",
+          "Renata",
+          "Maria",
+          "Ana",
+          "Joana",
+          "Letícia",
+          "Emilly",
+          "Helena",
+          "Luciana"
+        ];
+        const thirdParts = ["gosta de", "ama", "odeia", "não gosta de"];
+        const fourthParts = [
+          "comer banana",
+          "comer maçã",
+          "comer manga",
+          "beber café",
+          "estudar",
+          "criar coisas",
+          "dormir",
+          "dançar",
+          "conversar",
+          "cantar"
+        ];
+        const randomFrom = (array) => {
+          return array[Math.floor(Math.random() * array.length)];
+        };
+        const fem = Math.floor(Math.random() * 2) === 0;
+        const text = fem
+          ? `${randomFrom(firstPartsFem)} chamada ${randomFrom(
+              namesFem
+            )} ${randomFrom(thirdParts)} ${randomFrom(fourthParts)}`
+          : `${randomFrom(firstPartsMasc)} chamado ${randomFrom(
+              namesMasc
+            )} ${randomFrom(thirdParts)} ${randomFrom(fourthParts)}`;
+        var eventMsg = await message.channel.send(
+          `🎉 | Valendo 30 pontos, rápido: digite \`${text
+            .split("")
+            .join(blank)}\` no chat!`
+        );
+        message.channel
+          .awaitMessages(
+            (msg) => msg.content.toLowerCase() === text.toLowerCase(),
+            {
+              max: 1,
+              time: 15000,
+              errors: ["time"]
+            }
+          )
+          .then(async (msgs) => {
+            const winner = msgs.first().author;
+            const winnerMsg = await message.channel.send(
+              `🎉 | ${winner} digitou corretamente primeiro e ganhou 30 pontos.`
+            );
+            updatePoints(30, winner);
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 40
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter(
+                  (msg) =>
+                    msg.content.toLowerCase().slice(0, 4) === text.slice(0, 4)
+                )
+              );
+            }, 2000);
+            eventMsg.delete();
+          })
+          .catch(async (e) => {
+            const winnerMsg = await message.channel.send(
+              `🎉 | Ninguém digitou a tempo.`
+            );
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 40
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter(
+                  (msg) =>
+                    msg.content.toLowerCase().slice(0, 4) === text.slice(0, 4)
+                )
+              );
+            }, 2000);
+            eventMsg.delete();
+            setTimeout(
+              () =>
+                winnerMsg.edit(
+                  "🎉 | Aqui aconteceu um evento que ninguém ganhou."
+                ),
+              10000
+            );
+            eventEnded();
+          });
+      },
+      nextMsgs: async () => {
+        const numbers = [
+          "segundo",
+          "terceiro",
+          "quarto",
+          "quinto",
+          "sexto",
+          "sétimo",
+          "oitavo"
+        ];
+        const quantity = Math.floor(Math.random() * 7);
+        var eventMsg = await message.channel.send(
+          `🎉 | O ${numbers[quantity]} a mandar mensagem abaixo ganha 30 pontos.`
+        );
+        message.channel
+          .awaitMessages((msg) => !msg.author.bot, {
+            max: quantity + 2,
+            time: 20000,
+            errors: ["time"]
+          })
+          .then(async (msgs) => {
+            const winner = msgs.last().author;
+            var unfair = false;
+            if (
+              msgs.reduce(
+                (acc, m) => acc + (m.author.id === winner.id ? 1 : 0),
+                0
+              ) >=
+                quantity + 1 &&
+              quantity > 1
+            )
+              unfair = true;
+            if (unfair) {
+              const winnerMsg = await message.channel.send(
+                `🎉 | ${winner}, você não ganhou nada por forçar a vitória (mandou muitas mensagens para ganhar).`
+              );
+              eventEnded();
+              setTimeout(async () => {
+                const lastMsgs = await message.channel.messages.fetch({
+                  limit: quantity + 2
+                });
+                message.channel.bulkDelete(
+                  lastMsgs.filter((msg) => msg.content.length < 5)
+                );
+              }, 2000);
+              setTimeout(
+                () =>
+                  winnerMsg.edit(
+                    "🎉 | Aqui aconteceu um evento que ninguém ganhou."
+                  ),
+                10000
+              );
+            } else {
+              const winnerMsg = await message.channel.send(
+                `🎉 | ${winner} ganhou 30 pontos.`
+              );
+              updatePoints(30, winner);
+              setTimeout(async () => {
+                const lastMsgs = await message.channel.messages.fetch({
+                  limit: quantity + 2
+                });
+                message.channel.bulkDelete(
+                  lastMsgs.filter((msg) => msg.content.length < 5)
+                );
+              }, 1500);
+            }
+            eventMsg.delete();
+          })
+          .catch(async (e) => {
+            const winnerMsg = await message.channel.send(
+              `🎉 | Parece que o chat morreu. Que triste.`
+            );
+            eventMsg.delete();
+            setTimeout(
+              () =>
+                winnerMsg.edit(
+                  "🎉 | Aqui aconteceu um evento que ninguém ganhou."
+                ),
+              10000
+            );
+            eventEnded();
+          });
+      }
+    };
+    const startRandomEvent = () => {
+      events[
+        Object.keys(events)[
+          Math.floor(Math.random() * Object.keys(events).length)
+        ]
+      ]();
+    };
+    if (
+      message.content.startsWith("ativar evento") &&
+      bot.config.owners.includes(message.author.id)
+    ) {
+      if (message.content.split(" ").slice(2).length > 0) {
+        events[message.content.split(" ").slice(2)]();
+      } else {
+        startRandomEvent();
+      }
+    } else {
+      startRandomEvent();
+    }
   }
 
   // Commands

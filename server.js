@@ -24,6 +24,12 @@ bot.imgsDb = new Enmap({
   dataDir: "./db",
   pollingInterval: 3000
 });
+bot.points = new Enmap({
+  name: "userPoints",
+  dataDir: "./db",
+  pollingInterval: 2000
+});
+bot.eventRunning = false;
 bot.utils = require("./utils");
 global.rolemention = { roleID: false, author: false };
 

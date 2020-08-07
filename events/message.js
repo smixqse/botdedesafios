@@ -21,7 +21,94 @@ module.exports = (bot, message) => {
       global.rolemention.author.id = "nada";
     }
   }
-  
+
+  // Message cooldown
+  if (
+    !message.author.bot &&
+    bot.messageCooldown.isReady &&
+    bot.punishments.isReady
+  ) {
+    (async () => {
+      const cooldownTime = 2000;
+      if (
+        bot.messageCooldown.filter(
+          (a) =>
+            a.user === message.author.id && Date.now() - a.time < cooldownTime
+        ).size > 1
+      ) {
+        const timestamp = Date.now();
+        const punishmentValue = bot.punishments.ensure(message.author.id, {
+          amount: 0,
+          time: timestamp
+        });
+        if (
+          punishmentValue.amount > 2 &&
+          timestamp - punishmentValue.time < 15000
+        ) {
+          const mutedRole = message.guild.roles.cache.find(
+            (role) => role.name === "Muted"
+          );
+          if (!message.member.roles.cache.has(mutedRole.id)) {
+            const sentMsg = await message.channel.send(
+              `❗ | ${message.author} foi floodar, agora tá mutado pra se acalmar um pouco. Toma.`
+            );
+            message.member.roles.add(mutedRole);
+            setTimeout(() => {
+              message.member.roles.remove(mutedRole);
+            }, 60000);
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 20
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter((msg) => msg.author.id === message.author.id)
+              );
+            }, 500);
+            sentMsg.delete({ timeout: 8000 });
+          } else {
+            setTimeout(async () => {
+              const lastMsgs = await message.channel.messages.fetch({
+                limit: 20
+              });
+              message.channel.bulkDelete(
+                lastMsgs.filter((msg) => msg.author.id === message.author.id)
+              );
+            }, 500);
+          }
+        } else {
+          if (punishmentValue.amount > 2) {
+            bot.punishments.delete(message.author.id);
+          } else {
+            bot.punishments.inc(message.author.id, "amount");
+          }
+          message.delete();
+          if (
+            (await message.channel.messages.fetch({ limit: 5 })).some(
+              (msg) => msg.author.id === bot.user.id
+            )
+          )
+            return;
+          const messages = [
+            "tá com pressa aí amigo? Toma um chá pra se acalmar. Conversa mais devagar.",
+            "se acalma um pouquinho aí, amigo! Tá mandando muita mensagem.",
+            "PARA DE MANDAR TANTA MENSAGEM!!!! Desculpa, tô bravo."
+          ];
+          const randomMessage =
+            messages[Math.floor(Math.random() * messages.length)];
+          const sentMsg = await message.channel.send(
+            `❗ | ${message.author}, ${randomMessage}`
+          );
+          sentMsg.delete({ timeout: 5000 });
+        }
+      } else {
+        bot.messageCooldown.set(message.id, {
+          user: message.author.id,
+          time: Date.now()
+        });
+      }
+    })();
+  }
+
   // Repeated attachment prevention
   if (message.channel.name === "memes") {
     setTimeout(async () => {

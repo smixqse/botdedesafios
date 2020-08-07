@@ -29,9 +29,16 @@ bot.points = new Enmap({
   dataDir: "./db",
   pollingInterval: 2000
 });
+bot.messageCooldown = new Enmap();
+bot.punishments = new Enmap();
 bot.eventRunning = false;
 bot.utils = require("./utils");
 global.rolemention = { roleID: false, author: false };
+
+setInterval(() => {
+  bot.messageCooldown.sweep((a) => Date.now() - a.time > 15000);
+  bot.punishments.sweep((a) => Date.now() - a.time > 30000);
+}, 15000);
 
 bot.on("ready", (ready) => {
   bot.setInterval(() => {

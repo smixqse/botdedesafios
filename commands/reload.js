@@ -1,6 +1,7 @@
 const fs = require("fs");
 exports.aliases = ["reload", "recarregar", "cmdr", "resetcmd"];
-exports.description = "Usado para recarregar arquivos de comandos.";
+exports.description =
+  "Usado para recarregar arquivos de comandos ou eventos. APENAS PARA O CRIADOR";
 exports.run = (bot, message, args) => {
   if (!bot.config.owners.includes(message.author.id)) return;
   if (!args || args.size < 1)
@@ -8,34 +9,41 @@ exports.run = (bot, message, args) => {
       bot.utils.mention(message.author.id) +
         "Escreva um comando pra recarregar."
     );
-  const commandName = args[0];
+  const commandName = args[1];
   let thereIsSomeError = false;
+  var myRequire;
   try {
-    require(`./${commandName}.js`);
+    if (args[0] === "command" || args[0] !== "event") {
+      myRequire = `./${commandName}.js`;
+      require(myRequire);
+    } else if (args[0] === "event") {
+      myRequire = `../events/${commandName}.js`;
+      require(myRequire);
+    }
   } catch (e) {
     thereIsSomeError = true;
   }
   if (thereIsSomeError)
     message.channel.send(
       bot.utils.mention(message.author.id) +
-        "Digite apenas nomes de arquivos de comandos, não as aliases."
+        "Esse comando ou evento não existe."
     );
   if (thereIsSomeError) return;
-  if (!bot.commands.has(commandName))
-    message.channel.send(
-      bot.utils.mention(message.author.id) + "Esse comando não existe."
-    );
-  if (!bot.commands.has(commandName)) return;
-  delete require.cache[require.resolve(`./${commandName}.js`)];
-  const props = require(`./${commandName}.js`);
-  props.aliases.forEach((alias) => {
-    bot.commands.delete(alias);
-    bot.commands.set(alias, props);
-  });
+  delete require.cache[require.resolve(myRequire)];
+  const props = require(myRequire);
+  if (args[0] === "event") {
+    bot.removeAllListeners(commandName);
+    bot.on(commandName, props.bind(null, bot));
+  }
+  if (args[0] === "command")
+    props.aliases.forEach((alias) => {
+      bot.commands.delete(alias);
+      bot.commands.set(alias, props);
+    });
   message.channel.send(
     bot.utils.mention(message.author.id) +
-      "O comando `" +
-      args[0] +
+      "O comando/evento `" +
+      args[1] +
       "` foi recarregado."
   );
 };

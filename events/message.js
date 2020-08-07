@@ -270,12 +270,18 @@ module.exports = (bot, message) => {
           .catch(async (msgs) => {
             var processedUsers = [];
             var winners = [];
+            var duplicateUsers = [];
             msgs.forEach(async (msg) => {
-              if (processedUsers.includes(msg.author.id)) return;
-              if (msg.content === number) {
-                winners.push(msg.author);
+              if (processedUsers.includes(msg.author.id)) {
+                if (!duplicateUsers.includes(msg.author))
+                  duplicateUsers.push(msg.author);
+                return;
+              } else {
+                if (msg.content === number) {
+                  winners.push(msg.author);
+                }
+                processedUsers.push(msg.author.id);
               }
-              processedUsers.push(msg.author.id);
             });
             var msgToSend;
             if (winners.length < 1) {
@@ -287,6 +293,11 @@ module.exports = (bot, message) => {
               } o${single ? "" : "s"} ganhador${
                 single ? "" : "es"
               }! O número era ${number}.`;
+            }
+            if (duplicateUsers.length > 0) {
+              msgToSend += `\n\nE atenção para ${duplicateUsers.join(
+                " e "
+              )}: mandar um número mais de uma vez não funciona.`;
             }
             updatePoints(50, ...winners);
             const winnerMsg = await message.channel.send(msgToSend);

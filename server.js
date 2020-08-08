@@ -53,6 +53,7 @@ fs.readdir("./commands/", (err, files) => {
   bot.files = files;
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
+    if (file.endsWith(".example.js")) return;
     let props = require(`./commands/${file}`);
     let commandNames = props.aliases;
     commandNames.forEach((commandName) => {
@@ -67,6 +68,7 @@ fs.readdir("./events/", (err, files) => {
   if (err) return console.error(err);
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
+    if (file.endsWith(".example.js")) return;
     const event = require(`./events/${file}`);
     let eventName = file.split(".")[0];
     bot.on(eventName, event.bind(null, bot));

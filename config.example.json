@@ -1,0 +1,20 @@
+{
+  "prefix": "g.",
+  "guild": "id do único server em que o bot vai funcionar",
+  "owners": ["id do primeiro dono", "id do segundo dono", "..."],
+  "defaultOnlyChannels": [
+    "nome do primeiro canal em que o bot pode falar",
+    "nome do segundo canal",
+    "remover esta array do config fará com que os comandos que não têm permissões especificadas funcionem em todos os canais."
+  ],
+  "messageCooldown": {
+    "cooldown": 2000,
+    "count": 2,
+    "punishmentCooldown": 15000,
+    "muteTime": 60000
+  },
+  "repostChannel": "memes",
+  "chatEvents": {
+    "channel": "geral"
+  }
+}

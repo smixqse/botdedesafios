@@ -119,9 +119,7 @@ exports.run = (bot, message, args) => {
               msg.edit(
                 " ",
                 new Discord.MessageEmbed()
-                  .setColor(
-                    message.guild.roles.cache.get(bot.config.botRole).hexColor
-                  )
+                  .setColor(message.guild.me.displayHexColor || "#00000")
                   .setAuthor(message.author.username, image)
                   .setFooter(bot.user.username, bot.user.displayAvatarURL())
                   .setDescription(
@@ -140,9 +138,7 @@ exports.run = (bot, message, args) => {
         if (!readOnly) {
           message.channel.send(
             new Discord.MessageEmbed()
-              .setColor(
-                message.guild.roles.cache.get(bot.config.botRole).hexColor
-              )
+              .setColor(message.guild.me.displayHexColor || "#00000")
               .setAuthor(
                 message.author.username,
                 message.author.displayAvatarURL()

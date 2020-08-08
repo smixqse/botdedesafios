@@ -4,7 +4,6 @@ const Discord = require("discord.js");
 const axios = require("axios");
 const crypto = require("crypto");
 const moment = require("moment");
-const { ENGINE_METHOD_PKEY_ASN1_METHS } = require("constants");
 moment.locale("pt-br");
 
 module.exports = (bot, message) => {
@@ -26,15 +25,16 @@ module.exports = (bot, message) => {
   if (
     !message.author.bot &&
     bot.messageCooldown.isReady &&
-    bot.punishments.isReady
+    bot.punishments.isReady &&
+    message.permissionsFor(message.guild.me).has("MANAGE_MESSAGES")
   ) {
     (async () => {
-      const cooldownTime = 2000;
+      const cooldownTime = bot.config.messageCooldown.cooldown;
       if (
         bot.messageCooldown.filter(
           (a) =>
             a.user === message.author.id && Date.now() - a.time < cooldownTime
-        ).size > 1
+        ).size >= bot.config.messageCooldown.count
       ) {
         const timestamp = Date.now();
         const punishmentValue = bot.punishments.ensure(message.author.id, {
@@ -42,8 +42,9 @@ module.exports = (bot, message) => {
           time: timestamp
         });
         if (
-          punishmentValue.amount > 2 &&
-          timestamp - punishmentValue.time < 15000
+          punishmentValue.amount > bot.config.messageCooldown.count &&
+          timestamp - punishmentValue.time <
+            bot.config.messageCooldown.punishmentCooldown
         ) {
           const mutedRole = message.guild.roles.cache.find(
             (role) => role.name === "Muted"
@@ -55,7 +56,7 @@ module.exports = (bot, message) => {
             message.member.roles.add(mutedRole);
             setTimeout(() => {
               message.member.roles.remove(mutedRole);
-            }, 60000);
+            }, bot.config.messageCooldown.muteTime);
             setTimeout(async () => {
               const lastMsgs = await message.channel.messages.fetch({
                 limit: 20
@@ -76,7 +77,7 @@ module.exports = (bot, message) => {
             }, 500);
           }
         } else {
-          if (punishmentValue.amount > 2) {
+          if (punishmentValue.amount > bot.config.messageCooldown.count) {
             bot.punishments.delete(message.author.id);
           } else {
             bot.punishments.inc(message.author.id, "amount");
@@ -110,7 +111,7 @@ module.exports = (bot, message) => {
   }
 
   // Repeated attachment prevention
-  if (message.channel.name === "memes") {
+  if (message.channel.name === bot.config.repostChannel) {
     setTimeout(async () => {
       await bot.imgsDb.defer;
       message = await message.fetch();
@@ -185,7 +186,7 @@ module.exports = (bot, message) => {
   if (
     (Math.floor(Math.random() * 25) === 2 &&
       Math.floor(Math.random() * 2) === 0 &&
-      message.channel.name === "geral" &&
+      message.channel.name === bot.config.chatEvents.channel &&
       message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES") &&
       !bot.eventRunning) ||
     (message.content.startsWith("ativar evento") &&
@@ -229,7 +230,14 @@ module.exports = (bot, message) => {
                 limit: 40
               });
               message.channel.bulkDelete(
-                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+                lastMsgs.filter(
+                  (msg) =>
+                    !isNaN(
+                      msg.content.slice(0, 2) &&
+                        msg.attachments.size < 0 &&
+                        msg.embeds.length < 0
+                    )
+                )
               );
             }, 2000);
             eventMsg.delete();
@@ -243,7 +251,14 @@ module.exports = (bot, message) => {
                 limit: 40
               });
               message.channel.bulkDelete(
-                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+                lastMsgs.filter(
+                  (msg) =>
+                    !isNaN(
+                      msg.content.slice(0, 2) &&
+                        msg.attachments.size < 0 &&
+                        msg.embeds.length < 0
+                    )
+                )
               );
             }, 2000);
             eventMsg.delete();
@@ -306,7 +321,14 @@ module.exports = (bot, message) => {
                 limit: 40
               });
               message.channel.bulkDelete(
-                lastMsgs.filter((msg) => !isNaN(msg.content.slice(0, 2)))
+                lastMsgs.filter(
+                  (msg) =>
+                    !isNaN(
+                      msg.content.slice(0, 2) &&
+                        msg.attachments.size < 0 &&
+                        msg.embeds.length < 0
+                    )
+                )
               );
             }, 1000);
             eventMsg.delete();
@@ -450,7 +472,10 @@ module.exports = (bot, message) => {
               message.channel.bulkDelete(
                 lastMsgs.filter(
                   (msg) =>
-                    msg.content.toLowerCase().slice(0, 4) === text.slice(0, 4)
+                    msg.content.toLowerCase().slice(0, 4) ===
+                      text.slice(0, 4) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 )
               );
             }, 2000);
@@ -467,7 +492,10 @@ module.exports = (bot, message) => {
               message.channel.bulkDelete(
                 lastMsgs.filter(
                   (msg) =>
-                    msg.content.toLowerCase().slice(0, 4) === text.slice(0, 4)
+                    msg.content.toLowerCase().slice(0, 4) ===
+                      text.slice(0, 4) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 )
               );
             }, 2000);
@@ -524,7 +552,9 @@ module.exports = (bot, message) => {
                   limit: quantity + 2
                 });
                 message.channel.bulkDelete(
-                  lastMsgs.filter((msg) => msg.content.length < 5)
+                  lastMsgs.filter((msg) => msg.content.length < 5) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 );
               }, 2000);
               setTimeout(
@@ -544,7 +574,9 @@ module.exports = (bot, message) => {
                   limit: quantity + 2
                 });
                 message.channel.bulkDelete(
-                  lastMsgs.filter((msg) => msg.content.length < 5)
+                  lastMsgs.filter((msg) => msg.content.length < 5) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 );
               }, 1500);
             }

@@ -232,11 +232,9 @@ module.exports = (bot, message) => {
               message.channel.bulkDelete(
                 lastMsgs.filter(
                   (msg) =>
-                    !isNaN(
-                      msg.content.slice(0, 2) &&
-                        msg.attachments.size < 0 &&
-                        msg.embeds.length < 0
-                    )
+                    !isNaN(msg.content.slice(0, 2)) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 )
               );
             }, 2000);
@@ -253,11 +251,9 @@ module.exports = (bot, message) => {
               message.channel.bulkDelete(
                 lastMsgs.filter(
                   (msg) =>
-                    !isNaN(
-                      msg.content.slice(0, 2) &&
-                        msg.attachments.size < 0 &&
-                        msg.embeds.length < 0
-                    )
+                    !isNaN(msg.content.slice(0, 2)) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 )
               );
             }, 2000);
@@ -323,11 +319,9 @@ module.exports = (bot, message) => {
               message.channel.bulkDelete(
                 lastMsgs.filter(
                   (msg) =>
-                    !isNaN(
-                      msg.content.slice(0, 2) &&
-                        msg.attachments.size < 0 &&
-                        msg.embeds.length < 0
-                    )
+                    !isNaN(msg.content.slice(0, 2)) &&
+                    msg.attachments.size < 0 &&
+                    msg.embeds.length < 0
                 )
               );
             }, 1000);
@@ -552,9 +546,12 @@ module.exports = (bot, message) => {
                   limit: quantity + 2
                 });
                 message.channel.bulkDelete(
-                  lastMsgs.filter((msg) => msg.content.length < 5) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                  lastMsgs.filter(
+                    (msg) =>
+                      msg.content.length < 5 &&
+                      msg.attachments.size < 0 &&
+                      msg.embeds.length < 0
+                  )
                 );
               }, 2000);
               setTimeout(
@@ -574,9 +571,12 @@ module.exports = (bot, message) => {
                   limit: quantity + 2
                 });
                 message.channel.bulkDelete(
-                  lastMsgs.filter((msg) => msg.content.length < 5) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                  lastMsgs.filter(
+                    (msg) =>
+                      msg.content.length < 5 &&
+                      msg.attachments.size < 0 &&
+                      msg.embeds.length < 0
+                  )
                 );
               }, 1500);
             }

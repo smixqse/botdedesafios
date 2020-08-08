@@ -233,8 +233,8 @@ module.exports = (bot, message) => {
                 lastMsgs.filter(
                   (msg) =>
                     !isNaN(msg.content.slice(0, 2)) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                    msg.attachments.size < 1 &&
+                    msg.embeds.length < 1
                 )
               );
             }, 2000);
@@ -252,8 +252,8 @@ module.exports = (bot, message) => {
                 lastMsgs.filter(
                   (msg) =>
                     !isNaN(msg.content.slice(0, 2)) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                    msg.attachments.size < 1 &&
+                    msg.embeds.length < 1
                 )
               );
             }, 2000);
@@ -320,8 +320,8 @@ module.exports = (bot, message) => {
                 lastMsgs.filter(
                   (msg) =>
                     !isNaN(msg.content.slice(0, 2)) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                    msg.attachments.size < 1 &&
+                    msg.embeds.length < 1
                 )
               );
             }, 1000);
@@ -468,8 +468,8 @@ module.exports = (bot, message) => {
                   (msg) =>
                     msg.content.toLowerCase().slice(0, 4) ===
                       text.slice(0, 4) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                    msg.attachments.size < 1 &&
+                    msg.embeds.length < 1
                 )
               );
             }, 2000);
@@ -488,8 +488,8 @@ module.exports = (bot, message) => {
                   (msg) =>
                     msg.content.toLowerCase().slice(0, 4) ===
                       text.slice(0, 4) &&
-                    msg.attachments.size < 0 &&
-                    msg.embeds.length < 0
+                    msg.attachments.size < 1 &&
+                    msg.embeds.length < 1
                 )
               );
             }, 2000);

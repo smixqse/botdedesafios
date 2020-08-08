@@ -13,8 +13,9 @@
     "punishmentCooldown": 15000,
     "muteTime": 60000
   },
-  "repostChannel": "memes",
+  "repostChannel": "canal pra detectar repost",
   "chatEvents": {
-    "channel": "geral"
+    "channel": "geral",
+    "probability": 25
   }
 }

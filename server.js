@@ -50,7 +50,6 @@ bot.on("ready", (ready) => {
 fs.readdir("./commands/", (err, files) => {
   console.log("[Info] Carregando comandos...");
   if (err) return console.error(err);
-  bot.files = files;
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
     if (file.endsWith(".example.js")) return;
@@ -68,7 +67,6 @@ fs.readdir("./events/", (err, files) => {
   if (err) return console.error(err);
   files.forEach((file) => {
     if (!file.endsWith(".js")) return;
-    if (file.endsWith(".example.js")) return;
     const event = require(`./events/${file}`);
     let eventName = file.split(".")[0];
     bot.on(eventName, event.bind(null, bot));

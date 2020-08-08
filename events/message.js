@@ -26,7 +26,7 @@ module.exports = (bot, message) => {
     !message.author.bot &&
     bot.messageCooldown.isReady &&
     bot.punishments.isReady &&
-    message.permissionsFor(message.guild.me).has("MANAGE_MESSAGES")
+    message.channel.permissionsFor(message.guild.me).has("MANAGE_MESSAGES")
   ) {
     (async () => {
       const cooldownTime = bot.config.messageCooldown.cooldown;
@@ -184,7 +184,7 @@ module.exports = (bot, message) => {
 
   // Mini chat events
   if (
-    (Math.floor(Math.random() * 25) === 2 &&
+    (Math.floor(Math.random() * bot.config.chatEvents.probability) === 2 &&
       Math.floor(Math.random() * 2) === 0 &&
       message.channel.name === bot.config.chatEvents.channel &&
       message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES") &&

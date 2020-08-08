@@ -16,7 +16,7 @@ exports.run = async (bot, message, args) => {
     }
     bot.config[key[0]][key[1]] = value;
   } else {
-    if (!bot.config[key[0]]) {
+    if (!bot.config[key]) {
       error();
       return;
     }

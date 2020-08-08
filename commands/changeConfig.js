@@ -4,6 +4,7 @@ exports.run = async (bot, message, args) => {
   if (!bot.config.owners.includes(message.author.id)) return;
   const key = args[0];
   const value = args[1];
+  if (!isNaN(value)) value = parseInt(value);
 
   const error = () => {
     message.channel.send("Essa configuração não existe.");

@@ -30,6 +30,8 @@ bot.points = new Enmap({
   pollingInterval: 2000
 });
 bot.messageCooldown = new Enmap();
+bot.eventMessageCount = 0;
+bot.countToEvent = 1;
 bot.punishments = new Enmap();
 bot.eventRunning = false;
 bot.utils = require("./utils");

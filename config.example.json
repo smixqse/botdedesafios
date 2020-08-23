@@ -16,6 +16,7 @@
   "repostChannel": "canal pra detectar repost",
   "chatEvents": {
     "channel": "geral",
-    "probability": 25
+    "probabilityFrom": 15,
+    "probabilityTo": 215
   }
 }

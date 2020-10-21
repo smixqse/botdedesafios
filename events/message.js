@@ -188,9 +188,11 @@ module.exports = (bot, message) => {
 
   // Mini chat events
   if (
-    message.channel.name === bot.config.chatEvents.channel &&
-    message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES") &&
-    !bot.eventRunning
+    (message.channel.name === bot.config.chatEvents.channel &&
+      message.channel.permissionsFor(message.guild.me).has("SEND_MESSAGES") &&
+      !bot.eventRunning) ||
+    (message.content.startsWith("ativar evento") &&
+      bot.config.owners.includes(message.author.id))
   ) {
     const eventWillRun = ++bot.eventMessageCount === bot.countToEvent;
     if (
@@ -800,14 +802,18 @@ module.exports = (bot, message) => {
             });
         },
         alphabet: async () => {
-          const alphabet = "abcdefghijklmnopqrstuvwxyz";
+          const rawAlphabet = "abcdefghijklmnopqrstuvwxyz";
+          const reverse = Math.floor(Math.random() * 3) > 0;
+          const alphabet = reverse
+            ? rawAlphabet
+            : rawAlphabet.split("").reverse().join("");
           const removedLetter =
             alphabet[Math.floor(Math.random() * (alphabet.length - 1)) + 1];
           var eventMsg = await message.channel.send(
             `🎉 | Valendo 30 pontos, rápido: qual letra está faltando em \`${alphabet.replace(
               removedLetter,
               ""
-            )}\`?`
+            )}\`? ${!reverse ? "(alfabeto ao contrário)" : ""}`
           );
           message.channel
             .awaitMessages(
@@ -861,7 +867,7 @@ module.exports = (bot, message) => {
             });
         }
       };
-      const disabledEvents = [];
+      const disabledEvents = ["nextMsgs"];
       const startRandomEvent = () => {
         const eventName = Object.keys(events)[
           Math.floor(Math.random() * Object.keys(events).length)
@@ -869,6 +875,8 @@ module.exports = (bot, message) => {
         if (!disabledEvents.includes(eventName)) {
           events[eventName]();
           eventEnded();
+        } else {
+          startRandomEvent();
         }
       };
       if (

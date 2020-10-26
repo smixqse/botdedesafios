@@ -347,9 +347,7 @@ module.exports = (bot, message) => {
             });
         },
         reaction: async () => {
-          const emojis = "😳 😄 🥺 😭 😔 😍 🦧 🐧 😠 😈 🐻 😤 😎 🤩 🤯 🧐 😵 🤐 🙄 🥶 🥵 🤬 😋 🤪 🤨 😞 🥴 🤢 🤠 👻 🤡".split(
-            " "
-          );
+          const emojis = "😳😄🥺😭😔😍🦧🐧😠😈🐻😤😎🤩🤯🧐😵🤐🙄🥶🥵🤬😋🤪🤨😞🥴🤢🤠👻🤡";
           var emoji = emojis[Math.floor(Math.random() * emojis.length)];
           var eventMsg = await message.channel.send(
             `🎉 | O primeiro que reagir a esta mensagem com ${emoji} ganha 50 pontos.`

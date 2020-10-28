@@ -148,18 +148,28 @@ module.exports = (bot, message) => {
           if (existsHash) {
             try {
               var originalMsg = await message.channel.messages.fetch(
-                bot.imgsDb.get(hash)
+                bot.imgsDb.get(hash, "message")
               );
+              var createdAt = bot.imgsDb.get(hash, "timestamp");
+              var timeDiff = Math.abs(new Date().getTime() - createdAt);
+              var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+              if (diffDays > bot.config.repostExpire) throw new Error();
               var author = originalMsg.author;
               message.delete();
               var embed = new Discord.MessageEmbed();
               embed.setTitle("Mídia possivelmente duplicada apagada");
               embed.setDescription(
                 `enviada por ${author} ${moment(
-                  originalMsg.createdTimestamp
+                  createdAt
                 ).fromNow()}\n\n[Clique aqui para ver a postagem original](${
                   originalMsg.url
                 })`
+              );
+              embed.setFooter(
+                "você poderá enviar este arquivo novamente " +
+                  moment(
+                    createdAt + bot.config.repostExpire * 1000 * 3600 * 24
+                  ).fromNow()
               );
               embed.setColor(message.guild.me.displayHexColor || "#00000");
               var sentMsg = await message.channel.send({
@@ -174,13 +184,19 @@ module.exports = (bot, message) => {
                 embed
               });
               sentMsg.delete({
-                timeout: 15000
+                timeout: 30000
               });
             } catch (e) {
-              bot.imgsDb.set(hash, message.id);
+              bot.imgsDb.set(hash, {
+                message: message.id,
+                timestamp: message.createdTimestamp
+              });
             }
           } else {
-            bot.imgsDb.set(hash, message.id);
+            bot.imgsDb.set(hash, {
+              message: message.id,
+              timestamp: message.createdTimestamp
+            });
           }
         });
     }, 2000);
@@ -220,20 +236,32 @@ module.exports = (bot, message) => {
         ) + bot.config.chatEvents.probabilityFrom;
       const events = {
         math: async () => {
-          const types = ["+", "x"];
+          const types = ["+", "x", "-"];
           const numbers = [
             [Math.floor(Math.random() * 300), Math.floor(Math.random() * 300)],
             [
               Math.floor(Math.random() * 20) + 5,
               Math.floor(Math.random() * 7) + 1
+            ],
+            [
+              Math.floor(Math.random() * 30) + 20,
+              Math.floor(Math.random() * 20)
             ]
           ];
           const type = Math.floor(Math.random() * types.length);
           const currentNumbs = numbers[type];
-          const result =
-            type === 0
-              ? currentNumbs[0] + currentNumbs[1]
-              : currentNumbs[0] * currentNumbs[1];
+          var result;
+          switch (type) {
+            case 0:
+              result = currentNumbs[0] + currentNumbs[1];
+              break;
+            case 1:
+              result = currentNumbs[0] * currentNumbs[1];
+              break;
+            case 2:
+              result = currentNumbs[0] - currentNumbs[1];
+              break;
+          }
           const worth = type === 0 ? 30 : 50;
           var eventMsg = await message.channel.send(
             `🎉 | Valendo ${worth} pontos, rápido: quanto é ${numbers[type][0]} ${types[type]} ${numbers[type][1]}?`

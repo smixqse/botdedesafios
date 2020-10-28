@@ -3,10 +3,11 @@ const Discord = require("discord.js");
 exports.aliases = ["leaderboard", "top", "points"];
 exports.description =
   "Vê as 5 pessoas com mais pontos do servidor, e checa sua quantidade de pontos.";
-exports.only = ["all"];
+exports.only = ["baderna", "casa-staffer-dos-bots", "casa-dos-bots"];
 
 exports.run = async (bot, message, args) => {
   await bot.points.defer;
+  await message.guild.members.fetch();
   const authorPoints = bot.points.ensure(message.author.id, {
     user: message.author.id,
     points: 0

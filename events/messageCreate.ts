@@ -8,7 +8,7 @@ function chatEventsHandler (message: Message) {
 }
 
 const event = (message: Message) => {
-  if (message.guildId !== config.guild) return;
+  if (message.guildId !== config.guildId) return;
 
   if (config.events.enabled) chatEventsHandler(message);
 };

@@ -8,6 +8,7 @@ import {
   Snowflake,
   TextChannel
 } from 'discord.js';
+import { send } from 'process';
 import config from './config';
 import {
   getRandomFrom,
@@ -20,10 +21,23 @@ type EventType = 'normal' | 'rare';
 type AwaitMessagesResponse = Collection<Snowflake, Message>;
 type ChatEvent = (
   eventName: string,
-  author: GuildMember,
   channel: TextChannel,
+  author: GuildMember,
   eventEnd: typeof eventEndFunction
 ) => void;
+
+type Intervention =
+  | {
+      channel: TextChannel;
+      type: 'steal';
+      creator: GuildMember;
+    }
+  | {
+      channel: TextChannel;
+      type: 'bet';
+      creator: GuildMember;
+      bet: GuildMember;
+    };
 
 const awaitMessages = (
   channel: TextChannel,
@@ -41,21 +55,41 @@ const awaitMessages = (
     .finally(finallyFunc);
 };
 
+const interventionChecker = (channel: TextChannel): Intervention | null => {
+  return {
+    channel,
+    type: 'bet',
+    creator: channel.guild.members.resolve(config.ownerId) as GuildMember,
+    bet: channel.guild.members.resolve(config.ownerId) as GuildMember
+  };
+
+  // TODO: pegar intervenção atual no canal na database
+};
+
 const givePoints = (winners: GuildMember[], amount: number) => {
   // TODO: código de dar pontos pros que ganharam
 };
 
-const replaceWinningMessage = (
+const replaceMessage = (message: string, ...args: string[]) => {
+  let returnedMessage = message;
+  for (const arg in args) {
+    returnedMessage = returnedMessage.replace(`{${arg}}`, args[arg]);
+  }
+  return returnedMessage;
+};
+
+const wonWord = (winners: GuildMember[]) =>
+  winners.length > 1 ? 'ganharam' : 'ganhou';
+
+const replaceResultMessage = (
   message: string,
   winners: GuildMember[],
   amount: number
 ) => {
-  return `${message.replace(
-    '{0}',
-    `${winners.join(', ')} ${
-      winners.length > 1 ? 'ganharam' : 'ganhou'
-    } ${amount} pontos`
-  )}`;
+  return replaceMessage(
+    message,
+    `${winners.join(', ')} ${wonWord(winners)} ${amount} pontos`
+  );
 };
 
 const deleteEventTries = (
@@ -78,17 +112,11 @@ const getMessage = (
   additional?: string
 ) => {
   const won = winners.length > 0;
-  const genericMessages = won
-    ? config.events.genericMessages.won
-    : config.events.genericMessages.lost;
-  const list: string[] = [
-    ...events[eventName].messages[won ? 'won' : 'lost'],
-    ...genericMessages
-  ];
+  const list: string[] = [...events[eventName].messages[won ? 'won' : 'lost']];
   const selectedMessage = getRandomFrom(list);
   if (won) {
     return (
-      replaceWinningMessage(selectedMessage, winners, amount) + ` ${additional}`
+      replaceResultMessage(selectedMessage, winners, amount) + ` ${additional}`
     );
   } else {
     return `${selectedMessage} ${additional}`;
@@ -115,31 +143,74 @@ const eventStartFunction = async (
 };
 
 const eventEndFunction = (
-  winners: GuildMember[],
   channel: TextChannel,
+  message: string,
   eventName: EventName,
-  amount = config.events.winPoints[0],
-  additional?: string
+  intervention: Intervention | null,
+  winners: GuildMember[],
+  amount = config.events.winPoints[0]
 ) => {
-  const eventType: EventType = events[eventName].type as EventType;
-  channel.send({
-    embeds: [
-      createEmbed(
-        getMessage(eventName, winners, amount, additional || ''),
-        eventType
-      )
-    ]
-  });
+  const eventType = events[eventName].type as EventType;
+  const won = winners.length > 0;
 
-  givePoints(winners, amount);
+  const defaultAction = () => {
+    channel.send({
+      embeds: [createEmbed(message, eventType)]
+    });
+
+    givePoints(winners, amount);
+  };
+
+  if (intervention) {
+    if (intervention.type === 'steal') {
+      if (won) {
+        channel.send({
+          embeds: [
+            createEmbed(
+              `${winners.join(', ')} ${wonWord(winners)}, ${replaceMessage(
+                config.events.interventionMessages.steal,
+                intervention.creator.toString()
+              )}`,
+              eventType
+            )
+          ]
+        });
+      } else {
+        defaultAction();
+      }
+    } else if (intervention.type === 'bet') {
+      const wonBet = winners.includes(intervention.bet);
+      const toAppend = won
+        ? wonBet
+          ? config.events.interventionMessages.betWin
+          : config.events.interventionMessages.betLose
+        : config.events.interventionMessages.betNoWinner;
+      const giveToBetter = wonBet ? amount * 2 : -amount;
+
+      channel.send({
+        embeds: [
+          createEmbed(
+            `${winners.join(', ') || 'ninguém'} ${wonWord(
+              winners
+            )}, ${replaceMessage(toAppend, intervention.creator.toString())}`,
+            eventType
+          )
+        ]
+      });
+      givePoints(winners, amount);
+      givePoints([intervention.creator], giveToBetter);
+    }
+  } else {
+    defaultAction();
+  }
 };
 
 export const runEvent = (
   eventName: EventName,
-  author: GuildMember,
   channel: TextChannel,
+  author: GuildMember,
   event: ChatEvent
-) => event(eventName, author, channel, eventEndFunction);
+) => event(eventName, channel, author, eventEndFunction);
 
 const createMessageEvent = (
   generateTarget: () => {
@@ -159,10 +230,12 @@ const createMessageEvent = (
   ) => {
     const { initialMessage, additional, filter, amount } = generateTarget();
 
+    const eventType = events[eventName].type as EventType;
+
     const startMessage = await eventStartFunction(
       initialMessage,
       channel,
-      events[eventName].type as EventType,
+      eventType,
       amount
     );
 
@@ -170,16 +243,28 @@ const createMessageEvent = (
       channel,
       filter,
       (messages) => {
+        const winners = messages.map(
+          (m) => m.member as NonNullable<GuildMember>
+        );
+
         eventEndFunction(
-          messages.map((a) => a.member as NonNullable<GuildMember>),
           channel,
+          getMessage(eventName, winners, amount, additional),
           eventName,
-          amount,
-          additional
+          interventionChecker(channel),
+          winners,
+          amount
         );
       },
       () => {
-        eventEndFunction([], channel, eventName, amount, additional);
+        eventEndFunction(
+          channel,
+          getMessage(eventName, [], amount, additional),
+          eventName,
+          interventionChecker(channel),
+          [],
+          amount
+        );
       },
       max,
       time,
@@ -264,12 +349,16 @@ export const events: Events = {
       won: ['que sorte! {0}.'],
       lost: ['tão de azar hoje! ninguém ganhou.']
     },
-    run: (eventName: EventName, channel: TextChannel, author: GuildMember) => {
+    run: async (
+      eventName: EventName,
+      channel: TextChannel,
+      author: GuildMember
+    ) => {
       const eventType = events[eventName].type as EventType;
       const amount = config.events.winPoints[1];
 
       const theNumber = getRandomNumberBetween(1, 10);
-      eventStartFunction(
+      const startMessage = await eventStartFunction(
         'digite no chat um número de 1 a 10! vamos sortear daqui a pouco.',
         channel,
         eventType,
@@ -286,9 +375,8 @@ export const events: Events = {
           return collection;
         },
         (collection) => {
-          const members = collection.map((a) => a.member);
+          const members = collection.map((a) => a.member) as GuildMember[];
           const messages = collection.map((a) => a);
-          const usersWithoutDuplicates = [...new Set(members)] as GuildMember[];
           const messagesWithoutDuplicates = removeDuplicatesBy(
             (x) => x.author.id,
             messages
@@ -302,7 +390,7 @@ export const events: Events = {
 
           const messageToSend =
             (winningMembers.length > 0
-              ? replaceWinningMessage(
+              ? replaceResultMessage(
                   getRandomFrom(events.luckyNumber.messages.won),
                   winningMembers,
                   amount
@@ -314,16 +402,20 @@ export const events: Events = {
                   ', '
                 )}: apenas o primeiro número enviado vale.`
               : '');
-          console.log(
-            winningMembers.map((a) => a!.user.username),
-            duplicates.map((a) => a!.user.username)
+
+          eventEndFunction(
+            channel,
+            messageToSend,
+            eventName,
+            interventionChecker(channel),
+            winningMembers,
+            amount
           );
 
-          channel.send({
-            embeds: [createEmbed(messageToSend, eventType)]
+          deleteEventTries(channel, startMessage, (message) => {
+            const content = Number(message.content);
+            return !!content && content >= 0 && content <= 10;
           });
-
-          givePoints(winningMembers, amount);
         },
         30,
         10000

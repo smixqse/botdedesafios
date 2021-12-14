@@ -22,16 +22,16 @@ export default {
     ),
   run: async (interaction: CommandInteraction) => {
     const eventNames = Object.keys(events) as EventName[];
-    const eventToRun = (interaction.options.getString('evento') ||
-      getRandomFrom(eventNames));
+    const eventToRun =
+      interaction.options.getString('evento') || getRandomFrom(eventNames);
     interaction.reply({
       content: `rodando evento ${eventToRun}`,
       ephemeral: true
     });
     runEvent(
-      'math',
-      interaction.member as GuildMember,
+      eventToRun as EventName,
       interaction.channel as TextChannel,
+      interaction.member as GuildMember,
       (events as Indexable)[eventToRun].run
     );
   }

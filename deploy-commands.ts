@@ -7,7 +7,7 @@ import { readdirSync } from 'fs';
 import { resolve } from 'path';
 import config from './config';
 
-const { client, guild } = config;
+const { clientId: client, guildId: guild } = config;
 
 const commands: {}[] = [];
 const enablePermissions: string[] = [];
@@ -41,10 +41,10 @@ const enablePermissions: string[] = [];
       const typedResponse = response as any;
       const permissions = typedResponse
         .filter((a: any) => a.default_permission === false)
-        .map((a) => {
+        .map((a: any) => {
           return {
             id: a.id,
-            permissions: [{ id: config.owner, type: 2, permission: true }]
+            permissions: [{ id: config.ownerId, type: 2, permission: true }]
           };
         });
       console.log(permissions);

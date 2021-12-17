@@ -58,9 +58,8 @@ const awaitMessages = (
 const interventionChecker = (channel: TextChannel): Intervention | null => {
   return {
     channel,
-    type: 'bet',
-    creator: channel.guild.members.resolve(config.ownerId) as GuildMember,
-    bet: channel.guild.members.resolve(config.ownerId) as GuildMember
+    type: 'steal',
+    creator: channel.guild.members.resolve(config.ownerId) as GuildMember
   };
 
   // TODO: pegar intervenção atual no canal na database
@@ -108,18 +107,15 @@ const deleteEventTries = (
 const getMessage = (
   eventName: EventName,
   winners: GuildMember[],
-  amount: number,
-  additional?: string
+  amount: number
 ) => {
   const won = winners.length > 0;
   const list: string[] = [...events[eventName].messages[won ? 'won' : 'lost']];
   const selectedMessage = getRandomFrom(list);
   if (won) {
-    return (
-      replaceResultMessage(selectedMessage, winners, amount) + ` ${additional}`
-    );
+    return replaceResultMessage(selectedMessage, winners, amount);
   } else {
-    return `${selectedMessage} ${additional}`;
+    return selectedMessage;
   }
 };
 
@@ -145,6 +141,7 @@ const eventStartFunction = async (
 const eventEndFunction = (
   channel: TextChannel,
   message: string,
+  additional: string,
   eventName: EventName,
   intervention: Intervention | null,
   winners: GuildMember[],
@@ -155,7 +152,7 @@ const eventEndFunction = (
 
   const defaultAction = () => {
     channel.send({
-      embeds: [createEmbed(message, eventType)]
+      embeds: [createEmbed(`${message} ${additional}`, eventType)]
     });
 
     givePoints(winners, amount);
@@ -170,7 +167,7 @@ const eventEndFunction = (
               `${winners.join(', ')} ${wonWord(winners)}, ${replaceMessage(
                 config.events.interventionMessages.steal,
                 intervention.creator.toString()
-              )}`,
+              )} ${additional}`,
               eventType
             )
           ]
@@ -192,7 +189,10 @@ const eventEndFunction = (
           createEmbed(
             `${winners.join(', ') || 'ninguém'} ${wonWord(
               winners
-            )}, ${replaceMessage(toAppend, intervention.creator.toString())}`,
+            )}, ${replaceMessage(
+              toAppend,
+              intervention.creator.toString()
+            )} ${additional}`,
             eventType
           )
         ]
@@ -249,7 +249,8 @@ const createMessageEvent = (
 
         eventEndFunction(
           channel,
-          getMessage(eventName, winners, amount, additional),
+          getMessage(eventName, winners, amount),
+          additional,
           eventName,
           interventionChecker(channel),
           winners,
@@ -259,7 +260,8 @@ const createMessageEvent = (
       () => {
         eventEndFunction(
           channel,
-          getMessage(eventName, [], amount, additional),
+          getMessage(eventName, [], amount),
+          additional,
           eventName,
           interventionChecker(channel),
           [],
@@ -396,16 +398,18 @@ export const events: Events = {
                   amount
                 )
               : getRandomFrom(events.luckyNumber.messages.lost)) +
-            ` o número era ${theNumber}.` +
-            (duplicates.length > 0
-              ? `\n\ne para ${duplicates.join(
+            ` o número era ${theNumber}.`;
+          const additional =
+            duplicates.length > 0
+              ? `\n\n⚠ atenção, ${duplicates.join(
                   ', '
                 )}: apenas o primeiro número enviado vale.`
-              : '');
+              : '';
 
           eventEndFunction(
             channel,
             messageToSend,
+            additional,
             eventName,
             interventionChecker(channel),
             winningMembers,
@@ -422,4 +426,5 @@ export const events: Events = {
       );
     }
   }
+  // TODO: resto dos eventos
 };

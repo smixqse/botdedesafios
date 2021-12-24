@@ -56,11 +56,13 @@ const awaitMessages = (
 };
 
 const interventionChecker = (channel: TextChannel): Intervention | null => {
-  return {
+  /*return {
     channel,
     type: 'steal',
     creator: channel.guild.members.resolve(config.ownerId) as GuildMember
-  };
+  };*/
+
+  return null;
 
   // TODO: pegar intervenção atual no canal na database
 };
@@ -335,14 +337,7 @@ export const events: Events = {
           amount: config.events.winPoints[1]
         };
       },
-      (message) => {
-        const number = Number(message.content);
-        if (number) {
-          return true;
-        } else {
-          return false;
-        }
-      }
+      (message) => !!Number(message.content)
     )
   },
   luckyNumber: {

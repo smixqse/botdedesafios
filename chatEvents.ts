@@ -290,7 +290,7 @@ interface Events {
   };
 }
 
-export type EventName = 'math' | 'luckyNumber';
+export type EventName = 'math' | 'luckyNumber' | 'alphabet';
 
 export const events: Events = {
   math: {
@@ -420,6 +420,64 @@ export const events: Events = {
         10000
       );
     }
+  },
+  alphabet: {
+    type: 'normal',
+    messages: {
+      won: [
+        'esse olho tá treinado! {0}.',
+        'boa, conseguiu achar! {0}.',
+        'nice! {0}.'
+      ],
+      lost: [
+        'nossa, tava tão escondida assim?',
+        'puts, parece que não conseguiram achar.',
+        'demoraram demais pra achar!'
+      ]
+    },
+    run: createMessageEvent(
+      () => {
+        const amounts = config.events.winPoints;
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        const removeRandomCharacterFrom = (text: string) => {
+          const letter = getRandomFrom(text.split(''));
+          return { text: text.replace(letter, ''), letter };
+        };
+        const variation = getRandomFrom([
+          { name: 'normal', amount: amounts[0] } as const,
+          { name: 'reverse', amount: amounts[1] } as const,
+          { name: 'shuffle', amount: amounts[2] } as const
+        ]);
+
+        const variationData = (() => {
+          switch (variation.name) {
+            case 'normal':
+              return removeRandomCharacterFrom(alphabet);
+            case 'reverse':
+              const reversed = alphabet.split('').reverse().join('');
+              return removeRandomCharacterFrom(reversed);
+            case 'shuffle':
+              let toShuffle = alphabet;
+              for (let i = 0; i < getRandomNumberBetween(5, 15); i++) {
+                const first = getRandomFrom(toShuffle.split(''));
+                const second = getRandomFrom(toShuffle.split(''));
+                toShuffle = toShuffle
+                  .replace(second, first)
+                  .replace(first, second);
+              }
+              return removeRandomCharacterFrom(toShuffle);
+          }
+        })();
+        return {
+          initialMessage: `qual letra está faltando aqui? (\`${variationData.text}\`)`,
+          additional: `a letra era ${variationData.letter.toUpperCase()}.`,
+          filter: (message) =>
+            message.content.toLowerCase() === variationData.letter,
+          amount: variation.amount
+        };
+      },
+      (message) => message.content.length <= 2
+    )
   }
   // TODO: resto dos eventos
 };

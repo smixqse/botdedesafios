@@ -219,9 +219,10 @@ const createMessageEvent = (
     initialMessage: string;
     additional: string;
     filter: CollectorFilter<[Message]>;
+    deleteFilter: (message: Message) => boolean;
     amount: number;
+    appendToFinalMessage?: (initialMessage: Message) => Promise<string>;
   },
-  deleteFilter?: (message: Message) => boolean,
   max?: number,
   time?: number
 ) => {
@@ -230,7 +231,14 @@ const createMessageEvent = (
     channel: TextChannel,
     author: GuildMember
   ) => {
-    const { initialMessage, additional, filter, amount } = generateTarget();
+    const {
+      initialMessage,
+      additional,
+      filter,
+      deleteFilter,
+      amount,
+      appendToFinalMessage
+    } = generateTarget();
 
     const eventType = events[eventName].type as EventType;
 
@@ -244,14 +252,18 @@ const createMessageEvent = (
     awaitMessages(
       channel,
       filter,
-      (messages) => {
+      async (messages) => {
         const winners = messages.map(
           (m) => m.member as NonNullable<GuildMember>
         );
 
+        const toAppend = appendToFinalMessage
+          ? await appendToFinalMessage(startMessage)
+          : '';
+
         eventEndFunction(
           channel,
-          getMessage(eventName, winners, amount),
+          getMessage(eventName, winners, amount) + toAppend,
           additional,
           eventName,
           interventionChecker(channel),
@@ -259,10 +271,14 @@ const createMessageEvent = (
           amount
         );
       },
-      () => {
+      async () => {
+        const toAppend = appendToFinalMessage
+          ? await appendToFinalMessage(startMessage)
+          : '';
+
         eventEndFunction(
           channel,
-          getMessage(eventName, [], amount),
+          getMessage(eventName, [], amount) + toAppend,
           additional,
           eventName,
           interventionChecker(channel),
@@ -290,7 +306,7 @@ interface Events {
   };
 }
 
-export type EventName = 'math' | 'luckyNumber' | 'alphabet';
+export type EventName = 'math' | 'luckyNumber' | 'alphabet' | 'fastType';
 
 export const events: Events = {
   math: {
@@ -299,46 +315,44 @@ export const events: Events = {
       won: ['tá bom nas matemáticas, né? {0}.'],
       lost: ['ninguém soube calcular rápido o suficiente.']
     },
-    run: createMessageEvent(
-      () => {
-        const operations = [
-          () => {
-            const first = getRandomNumberBetween(1, 900);
-            const last = getRandomNumberBetween(1, 700);
-            return { operation: `${first} + ${last}`, result: first + last };
-          },
-          () => {
-            const first = getRandomNumberBetween(1, 900);
-            const last = getRandomNumberBetween(1, 500);
-            return { operation: `${first} - ${last}`, result: first - last };
-          },
-          () => {
-            const first = getRandomNumberBetween(1, 30);
-            const last = getRandomNumberBetween(2, 5);
-            return { operation: `${first} * ${last}`, result: first * last };
-          },
-          () => {
-            const first = getRandomNumberBetween(1, 900);
-            const verifiedFirst = first % 2 !== 0 ? first + 1 : first;
-            const last = 2;
-            return {
-              operation: `${verifiedFirst} / ${last}`,
-              result: verifiedFirst / last
-            };
-          }
-        ];
+    run: createMessageEvent(() => {
+      const operations = [
+        () => {
+          const first = getRandomNumberBetween(1, 900);
+          const last = getRandomNumberBetween(1, 700);
+          return { operation: `${first} + ${last}`, result: first + last };
+        },
+        () => {
+          const first = getRandomNumberBetween(1, 900);
+          const last = getRandomNumberBetween(1, 500);
+          return { operation: `${first} - ${last}`, result: first - last };
+        },
+        () => {
+          const first = getRandomNumberBetween(1, 30);
+          const last = getRandomNumberBetween(2, 5);
+          return { operation: `${first} * ${last}`, result: first * last };
+        },
+        () => {
+          const first = getRandomNumberBetween(1, 900);
+          const verifiedFirst = first % 2 !== 0 ? first + 1 : first;
+          const last = 2;
+          return {
+            operation: `${verifiedFirst} / ${last}`,
+            result: verifiedFirst / last
+          };
+        }
+      ];
 
-        const decideOperation = getRandomNumberBetween(0, 3);
-        const { operation, result } = operations[decideOperation]();
-        return {
-          initialMessage: `quanto é ${operation}?`,
-          additional: `a resposta era ${result}.`,
-          filter: (message) => Number(message.content) === result,
-          amount: config.events.winPoints[1]
-        };
-      },
-      (message) => !!Number(message.content)
-    )
+      const decideOperation = getRandomNumberBetween(0, 3);
+      const { operation, result } = operations[decideOperation]();
+      return {
+        initialMessage: `quanto é ${operation}?`,
+        additional: `a resposta era ${result}.`,
+        filter: (message) => Number(message.content) === result,
+        deleteFilter: (message) => !!Number(message.content),
+        amount: config.events.winPoints[1]
+      };
+    })
   },
   luckyNumber: {
     type: 'normal',
@@ -435,49 +449,116 @@ export const events: Events = {
         'demoraram demais pra achar!'
       ]
     },
-    run: createMessageEvent(
-      () => {
-        const amounts = config.events.winPoints;
-        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-        const removeRandomCharacterFrom = (text: string) => {
-          const letter = getRandomFrom(text.split(''));
-          return { text: text.replace(letter, ''), letter };
-        };
-        const variation = getRandomFrom([
-          { name: 'normal', amount: amounts[0] } as const,
-          { name: 'reverse', amount: amounts[1] } as const,
-          { name: 'shuffle', amount: amounts[2] } as const
-        ]);
+    run: createMessageEvent(() => {
+      const amounts = config.events.winPoints;
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+      const removeRandomCharacterFrom = (text: string) => {
+        const letter = getRandomFrom(text.split(''));
+        return { text: text.replace(letter, ''), letter };
+      };
+      const variation = getRandomFrom([
+        { name: 'normal', amount: amounts[0] } as const,
+        { name: 'reverse', amount: amounts[1] } as const,
+        { name: 'shuffle', amount: amounts[2] } as const
+      ]);
 
-        const variationData = (() => {
-          switch (variation.name) {
-            case 'normal':
-              return removeRandomCharacterFrom(alphabet);
-            case 'reverse':
-              const reversed = alphabet.split('').reverse().join('');
-              return removeRandomCharacterFrom(reversed);
-            case 'shuffle':
-              let toShuffle = alphabet;
-              for (let i = 0; i < getRandomNumberBetween(5, 15); i++) {
-                const first = getRandomFrom(toShuffle.split(''));
-                const second = getRandomFrom(toShuffle.split(''));
-                toShuffle = toShuffle
-                  .replace(second, first)
-                  .replace(first, second);
-              }
-              return removeRandomCharacterFrom(toShuffle);
-          }
-        })();
-        return {
-          initialMessage: `qual letra está faltando aqui? (\`${variationData.text}\`)`,
-          additional: `a letra era ${variationData.letter.toUpperCase()}.`,
-          filter: (message) =>
-            message.content.toLowerCase() === variationData.letter,
-          amount: variation.amount
-        };
-      },
-      (message) => message.content.length <= 2
-    )
+      const variationData = (() => {
+        switch (variation.name) {
+          case 'normal':
+            return removeRandomCharacterFrom(alphabet);
+          case 'reverse':
+            const reversed = alphabet.split('').reverse().join('');
+            return removeRandomCharacterFrom(reversed);
+          case 'shuffle':
+            let toShuffle = alphabet;
+            for (let i = 0; i < getRandomNumberBetween(5, 15); i++) {
+              const first = getRandomFrom(toShuffle.split(''));
+              const second = getRandomFrom(toShuffle.split(''));
+              toShuffle = toShuffle
+                .replace(second, first)
+                .replace(first, second);
+            }
+            return removeRandomCharacterFrom(toShuffle);
+        }
+      })();
+      return {
+        initialMessage: `qual letra está faltando aqui? (\`${variationData.text}\`)`,
+        additional: `a letra era ${variationData.letter.toUpperCase()}.`,
+        filter: (message) =>
+          message.content.toLowerCase() === variationData.letter,
+        deleteFilter: (message) => message.content.length <= 2,
+        amount: variation.amount
+      };
+    })
+  },
+  fastType: {
+    type: 'normal',
+    messages: {
+      won: ['que mãos rápidas, hein? {0}.', 'temos o The Flash aqui! {0}.'],
+      lost: [
+        'ninguém foi rápido o suficiente!',
+        'ninguém escreveu rápido o suficiente. treinem melhor esses dedos na próxima!',
+        'vocês digitam devagar demais!'
+      ]
+    },
+    run: createMessageEvent(() => {
+      const parts = config.events.fastTypeParts;
+      const isFem = getRandomFrom([false, true]);
+      const names = isFem ? parts.names.fem : parts.names.masc;
+      const occupations = isFem
+        ? parts.occupations.fem
+        : parts.occupations.masc;
+      const formats = [
+        // exemplo: Renata me disse que viajou para outro país
+        `${getRandomFrom(names)} ${getRandomFrom(parts.said)} ${getRandomFrom(
+          parts.actionsOne
+        )}`,
+
+        // exemplo: Um professor chamado Ricardo odeia dormir
+        `${getRandomFrom(occupations)} chamad${
+          isFem ? 'a' : 'o'
+        } ${getRandomFrom(names)} ${getRandomFrom(
+          parts.likesHates
+        )} ${getRandomFrom(parts.likesHatesAction)}`,
+
+        // exemplo: Ontem, Natália estava comendo fast food
+        `${getRandomFrom(parts.pastTime)}, ${getRandomFrom(
+          names
+        )} estava ${getRandomFrom(parts.actionsTwo)}`
+      ];
+
+      const text = getRandomFrom(formats);
+      const shownText = text.split('').join('‎');
+
+      return {
+        initialMessage: `digite essa frase no chat: \`${shownText}\`.`,
+        additional: '',
+        filter: (message) =>
+          message.content.toLowerCase().startsWith(text.toLowerCase()),
+        deleteFilter: (message) =>
+          message.content
+            .toLowerCase()
+            .startsWith(text.toLowerCase().slice(0, 3)) ||
+          message.content === shownText,
+        amount: config.events.winPoints[1],
+        appendToFinalMessage: async (initialMessage) => {
+          const failedMessages = (
+            await initialMessage.channel.messages.fetch({
+              after: initialMessage.id
+            })
+          ).filter((m) => m.content.includes(shownText));
+          const failedUsers = removeDuplicatesBy(
+            (u) => u.id,
+            failedMessages.map((m) => m.author)
+          );
+          return failedMessages.size > 0
+            ? `\n\n⚠ atenção para ${failedUsers.join(
+                ', '
+              )}: copiar não funciona.`
+            : '';
+        }
+      };
+    })
   }
   // TODO: resto dos eventos
 };

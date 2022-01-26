@@ -138,7 +138,7 @@ const fastTypeParts = {
 };
 
 export default {
-  events: {
+  challenges: {
     enabled: true,
     channels: ['422418934202105858'],
     time: 15000,
@@ -154,7 +154,8 @@ export default {
       betLose: 'mas {0} perdeu por ter apostado em outra pessoa.',
       betNoWinner: 'e {0} perdeu por ter apostado em alguém.'
     },
-    fastTypeParts
+    fastTypeParts,
+    waitChallengeMinutes: 2
     // {0} = A ganhou X pontos, A e B ganharam X pontos, ninguém ganhou
     /*genericMessages: {
       won: ['boa! {0}.', 'aí sim! {0}.', 'que rapidez, hein? {0}.'],

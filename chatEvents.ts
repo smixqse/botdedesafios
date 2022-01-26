@@ -14,16 +14,17 @@ import {
   getRandomFrom,
   getRandomNumberBetween,
   removeDuplicates,
-  removeDuplicatesBy
+  removeDuplicatesBy,
+  wait
 } from './utils';
 
-type EventType = 'normal' | 'rare';
+type ChallengeType = 'normal' | 'rare';
 type AwaitMessagesResponse = Collection<Snowflake, Message>;
-type ChatEvent = (
-  eventName: string,
+type ChatChallenge = (
+  challengeName: string,
   channel: TextChannel,
   author: GuildMember,
-  eventEnd: typeof eventEndFunction
+  challengeEnd: typeof challengeEndFunction
 ) => void;
 
 type Intervention =
@@ -45,7 +46,7 @@ const awaitMessages = (
   thenFunc: (collection: AwaitMessagesResponse) => void,
   catchFunc: (collection: AwaitMessagesResponse) => void,
   max = 1,
-  time = config.events.time,
+  time = config.challenges.time,
   finallyFunc?: () => void
 ) => {
   channel
@@ -93,7 +94,7 @@ const replaceResultMessage = (
   );
 };
 
-const deleteEventTries = (
+const deleteChallengeTries = (
   channel: TextChannel,
   startMessage: Message,
   filter: (message: Message) => boolean,
@@ -107,12 +108,14 @@ const deleteEventTries = (
 };
 
 const getMessage = (
-  eventName: EventName,
+  challengeName: ChallengeName,
   winners: GuildMember[],
   amount: number
 ) => {
   const won = winners.length > 0;
-  const list: string[] = [...events[eventName].messages[won ? 'won' : 'lost']];
+  const list: string[] = [
+    ...challenges[challengeName].messages[won ? 'won' : 'lost']
+  ];
   const selectedMessage = getRandomFrom(list);
   if (won) {
     return replaceResultMessage(selectedMessage, winners, amount);
@@ -121,40 +124,40 @@ const getMessage = (
   }
 };
 
-const createEmbed = (message: string, type: EventType) => {
+const createEmbed = (message: string, type: ChallengeType) => {
   return new MessageEmbed()
-    .setColor(config.events.colors[type] as ColorResolvable)
+    .setColor(config.challenges.colors[type] as ColorResolvable)
     .setDescription(`🎉 | ${message}`);
 };
 
-const eventStartFunction = async (
+const challengeStartFunction = async (
   initialMessage: string,
   channel: TextChannel,
-  eventType: EventType,
+  challengeType: ChallengeType,
   amount: number
 ) => {
   return await channel.send({
     embeds: [
-      createEmbed(`valendo ${amount} pontos, ${initialMessage}`, eventType)
+      createEmbed(`valendo ${amount} pontos, ${initialMessage}`, challengeType)
     ]
   });
 };
 
-const eventEndFunction = (
+const challengeEndFunction = (
   channel: TextChannel,
   message: string,
   additional: string,
-  eventName: EventName,
+  challengeName: ChallengeName,
   intervention: Intervention | null,
   winners: GuildMember[],
-  amount = config.events.winPoints[0]
+  amount = config.challenges.winPoints[0]
 ) => {
-  const eventType = events[eventName].type as EventType;
+  const challengeType = challenges[challengeName].type as ChallengeType;
   const won = winners.length > 0;
 
   const defaultAction = () => {
     channel.send({
-      embeds: [createEmbed(`${message} ${additional}`, eventType)]
+      embeds: [createEmbed(`${message} ${additional}`, challengeType)]
     });
 
     givePoints(winners, amount);
@@ -167,10 +170,10 @@ const eventEndFunction = (
           embeds: [
             createEmbed(
               `${winners.join(', ')} ${wonWord(winners)}, ${replaceMessage(
-                config.events.interventionMessages.steal,
+                config.challenges.interventionMessages.steal,
                 intervention.creator.toString()
               )} ${additional}`,
-              eventType
+              challengeType
             )
           ]
         });
@@ -181,9 +184,9 @@ const eventEndFunction = (
       const wonBet = winners.includes(intervention.bet);
       const toAppend = won
         ? wonBet
-          ? config.events.interventionMessages.betWin
-          : config.events.interventionMessages.betLose
-        : config.events.interventionMessages.betNoWinner;
+          ? config.challenges.interventionMessages.betWin
+          : config.challenges.interventionMessages.betLose
+        : config.challenges.interventionMessages.betNoWinner;
       const giveToBetter = wonBet ? amount * 2 : -amount;
 
       channel.send({
@@ -195,7 +198,7 @@ const eventEndFunction = (
               toAppend,
               intervention.creator.toString()
             )} ${additional}`,
-            eventType
+            challengeType
           )
         ]
       });
@@ -207,14 +210,14 @@ const eventEndFunction = (
   }
 };
 
-export const runEvent = (
-  eventName: EventName,
+export const startChallenge = (
+  challengeName: ChallengeName,
   channel: TextChannel,
   author: GuildMember,
-  event: ChatEvent
-) => event(eventName, channel, author, eventEndFunction);
+  challenge: ChatChallenge
+) => challenge(challengeName, channel, author, challengeEndFunction);
 
-const createMessageEvent = (
+const createMessageChallenge = (
   generateTarget: () => {
     initialMessage: string;
     additional: string;
@@ -227,7 +230,7 @@ const createMessageEvent = (
   time?: number
 ) => {
   return async (
-    eventName: EventName,
+    challengeName: ChallengeName,
     channel: TextChannel,
     author: GuildMember
   ) => {
@@ -240,12 +243,12 @@ const createMessageEvent = (
       appendToFinalMessage
     } = generateTarget();
 
-    const eventType = events[eventName].type as EventType;
+    const challengeType = challenges[challengeName].type as ChallengeType;
 
-    const startMessage = await eventStartFunction(
+    const startMessage = await challengeStartFunction(
       initialMessage,
       channel,
-      eventType,
+      challengeType,
       amount
     );
 
@@ -261,11 +264,11 @@ const createMessageEvent = (
           ? await appendToFinalMessage(startMessage)
           : '';
 
-        eventEndFunction(
+        challengeEndFunction(
           channel,
-          getMessage(eventName, winners, amount) + toAppend,
+          getMessage(challengeName, winners, amount) + toAppend,
           additional,
-          eventName,
+          challengeName,
           interventionChecker(channel),
           winners,
           amount
@@ -276,11 +279,11 @@ const createMessageEvent = (
           ? await appendToFinalMessage(startMessage)
           : '';
 
-        eventEndFunction(
+        challengeEndFunction(
           channel,
-          getMessage(eventName, [], amount) + toAppend,
+          getMessage(challengeName, [], amount) + toAppend,
           additional,
-          eventName,
+          challengeName,
           interventionChecker(channel),
           [],
           amount
@@ -289,15 +292,16 @@ const createMessageEvent = (
       max,
       time,
       () => {
-        if (deleteFilter) deleteEventTries(channel, startMessage, deleteFilter);
+        if (deleteFilter)
+          deleteChallengeTries(channel, startMessage, deleteFilter);
       }
     );
   };
 };
 
-interface Events {
+interface Challenges {
   [key: string]: {
-    type: EventType;
+    type: ChallengeType;
     messages: {
       won: string[];
       lost: string[];
@@ -306,16 +310,21 @@ interface Events {
   };
 }
 
-export type EventName = 'math' | 'luckyNumber' | 'alphabet' | 'fastType';
+export type ChallengeName =
+  | 'math'
+  | 'luckyNumber'
+  | 'alphabet'
+  | 'fastType'
+  | 'wait';
 
-export const events: Events = {
+export const challenges: Challenges = {
   math: {
     type: 'normal',
     messages: {
       won: ['tá bom nas matemáticas, né? {0}.'],
       lost: ['ninguém soube calcular rápido o suficiente.']
     },
-    run: createMessageEvent(() => {
+    run: createMessageChallenge(() => {
       const operations = [
         () => {
           const first = getRandomNumberBetween(1, 900);
@@ -350,7 +359,7 @@ export const events: Events = {
         additional: `a resposta era ${result}.`,
         filter: (message) => Number(message.content) === result,
         deleteFilter: (message) => !!Number(message.content),
-        amount: config.events.winPoints[1]
+        amount: config.challenges.winPoints[1]
       };
     })
   },
@@ -361,18 +370,18 @@ export const events: Events = {
       lost: ['tão de azar hoje! ninguém ganhou.']
     },
     run: async (
-      eventName: EventName,
+      challengeName: ChallengeName,
       channel: TextChannel,
       author: GuildMember
     ) => {
-      const eventType = events[eventName].type as EventType;
-      const amount = config.events.winPoints[1];
+      const challengeType = challenges[challengeName].type as ChallengeType;
+      const amount = config.challenges.winPoints[1];
 
       const theNumber = getRandomNumberBetween(1, 10);
-      const startMessage = await eventStartFunction(
+      const startMessage = await challengeStartFunction(
         'digite no chat um número de 1 a 10! vamos sortear daqui a pouco.',
         channel,
-        eventType,
+        challengeType,
         amount
       );
 
@@ -382,9 +391,7 @@ export const events: Events = {
           !isNaN(Number(message.content)) &&
           Number(message.content) >= 1 &&
           Number(message.content) <= 10,
-        (collection) => {
-          return collection;
-        },
+        (collection) => collection,
         (collection) => {
           const members = collection.map((a) => a.member) as GuildMember[];
           const messages = collection.map((a) => a);
@@ -402,11 +409,11 @@ export const events: Events = {
           const messageToSend =
             (winningMembers.length > 0
               ? replaceResultMessage(
-                  getRandomFrom(events.luckyNumber.messages.won),
+                  getRandomFrom(challenges.luckyNumber.messages.won),
                   winningMembers,
                   amount
                 )
-              : getRandomFrom(events.luckyNumber.messages.lost)) +
+              : getRandomFrom(challenges.luckyNumber.messages.lost)) +
             ` o número era ${theNumber}.`;
           const additional =
             duplicates.length > 0
@@ -415,17 +422,17 @@ export const events: Events = {
                 )}: apenas o primeiro número enviado vale.`
               : '';
 
-          eventEndFunction(
+          challengeEndFunction(
             channel,
             messageToSend,
             additional,
-            eventName,
+            challengeName,
             interventionChecker(channel),
             winningMembers,
             amount
           );
 
-          deleteEventTries(channel, startMessage, (message) => {
+          deleteChallengeTries(channel, startMessage, (message) => {
             const content = Number(message.content);
             return !!content && content >= 0 && content <= 10;
           });
@@ -449,8 +456,8 @@ export const events: Events = {
         'demoraram demais pra achar!'
       ]
     },
-    run: createMessageEvent(() => {
-      const amounts = config.events.winPoints;
+    run: createMessageChallenge(() => {
+      const amounts = config.challenges.winPoints;
       const alphabet = 'abcdefghijklmnopqrstuvwxyz';
       const removeRandomCharacterFrom = (text: string) => {
         const letter = getRandomFrom(text.split(''));
@@ -501,8 +508,8 @@ export const events: Events = {
         'vocês digitam devagar demais!'
       ]
     },
-    run: createMessageEvent(() => {
-      const parts = config.events.fastTypeParts;
+    run: createMessageChallenge(() => {
+      const parts = config.challenges.fastTypeParts;
       const isFem = getRandomFrom([false, true]);
       const names = isFem ? parts.names.fem : parts.names.masc;
       const occupations = isFem
@@ -540,7 +547,7 @@ export const events: Events = {
             .toLowerCase()
             .startsWith(text.toLowerCase().slice(0, 3)) ||
           message.content === shownText,
-        amount: config.events.winPoints[1],
+        amount: config.challenges.winPoints[1],
         appendToFinalMessage: async (initialMessage) => {
           const failedMessages = (
             await initialMessage.channel.messages.fetch({
@@ -559,6 +566,73 @@ export const events: Events = {
         }
       };
     })
+  },
+  wait: {
+    messages: {
+      won: [
+        'obrigado por ser paciente! {0}',
+        'valeu por esperar! {0}',
+        'que bom que você lembrou! {0}'
+      ],
+      lost: ['não foi dessa vez.', '']
+    },
+    type: 'rare',
+    run: async (
+      challengeName: ChallengeName,
+      channel: TextChannel,
+      author: GuildMember
+    ) => {
+      const challengeType = challenges[challengeName].type as ChallengeType;
+      const amount = config.challenges.winPoints[2];
+
+      const theNumber = getRandomNumberBetween(10, 400);
+      const minutes = config.challenges.waitChallengeMinutes;
+      const startMessage = await challengeStartFunction(
+        `lembre deste número (\`${theNumber}\`). voltarei daqui a ${minutes} minutos.`,
+        channel,
+        challengeType,
+        amount
+      );
+
+      setTimeout(() => startMessage.delete(), 15000);
+
+      await wait(minutes * 60 * 1000);
+
+      const actualStartMessage = await challengeStartFunction(
+        `qual foi o número que mandei alguns minutos atrás?`,
+        channel,
+        challengeType,
+        amount
+      );
+
+      const processCollection = (collection: AwaitMessagesResponse) => {
+        const wonMembers = [collection.first()?.member as GuildMember] ?? [];
+
+        challengeEndFunction(
+          channel,
+          collection.size > 0
+            ? replaceResultMessage(
+                getRandomFrom(challenges.luckyNumber.messages.won),
+                wonMembers,
+                amount
+              )
+            : getRandomFrom(challenges.luckyNumber.messages.lost),
+          `o número era ${theNumber}.`,
+          'wait',
+          interventionChecker(channel),
+          wonMembers
+        );
+      };
+
+      awaitMessages(
+        channel,
+        (message) => Number(message.content) === theNumber,
+        (collection) => processCollection(collection),
+        (collection) => processCollection(collection),
+        1,
+        20000
+      );
+    }
   }
-  // TODO: resto dos eventos
+  // TODO: resto dos desafios
 };

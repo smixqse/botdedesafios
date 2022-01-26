@@ -1,23 +1,17 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import {
   CommandInteraction,
-  GuildChannel,
-  GuildMember,
-  TextChannel
-} from 'discord.js';
-import { EventName, events } from '../chatEvents';
-import { getRandomNumberBetween, Indexable } from './../utils';
-import { runEvent } from './../chatEvents';
-import { ChannelTypes } from 'discord.js/typings/enums';
+  GuildChannel} from 'discord.js';
+import { challenges } from '../chatEvents';
 
-const options: [name: string, value: string][] = Object.keys(events).map(
+const options: [name: string, value: string][] = Object.keys(challenges).map(
   (a) => [a, a]
 );
 
 export default {
   data: new SlashCommandBuilder()
     .setName('say')
-    .setDescription('Faz o RobôDoCore falar algo em algum canal de texto.')
+    .setDescription('Faz o bot falar algo em algum canal de texto.')
     .setDefaultPermission(false)
     .addStringOption((option) =>
       option

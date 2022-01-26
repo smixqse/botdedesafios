@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import config from './../config';
 
 function chatEventsHandler (message: Message) {
-  if (!config.events.channels.includes(message.channelId)) return;
+  if (!config.challenges.channels.includes(message.channelId)) return;
 
   
 }
@@ -10,7 +10,7 @@ function chatEventsHandler (message: Message) {
 const event = (message: Message) => {
   if (message.guildId !== config.guildId) return;
 
-  if (config.events.enabled) chatEventsHandler(message);
+  if (config.challenges.enabled) chatEventsHandler(message);
 };
 
 export default {

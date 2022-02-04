@@ -27,7 +27,7 @@ type ChatChallenge = (
   challengeEnd: typeof challengeEndFunction
 ) => void;
 
-type Intervention =
+export type Intervention =
   | {
       channel: TextChannel;
       type: 'steal';

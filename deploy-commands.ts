@@ -2,7 +2,6 @@ require('dotenv').config();
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { Interaction } from 'discord.js';
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
 import config from './config';
@@ -10,7 +9,6 @@ import config from './config';
 const { clientId: client, guildId: guild } = config;
 
 const commands: {}[] = [];
-const enablePermissions: string[] = [];
 
 (async () => {
   console.log('preparing commands...');

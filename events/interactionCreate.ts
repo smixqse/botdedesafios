@@ -1,9 +1,10 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { Interaction } from 'discord.js';
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
 import { EventModule } from '../utils';
 
-const commands = new Map<string, EventModule['run']>();
+const commands = new Map<string, EventModule>();
 
 (async () => {
   console.log('preparing commands...');
@@ -13,7 +14,7 @@ const commands = new Map<string, EventModule['run']>();
     const imported: EventModule = (
       await import(resolve(`./commands/${fileNameWithoutExtension}`))
     ).default;
-    commands.set(fileNameWithoutExtension, imported.run);
+    commands.set(fileNameWithoutExtension, imported);
   }
 })();
 
@@ -22,7 +23,14 @@ const event = (interaction: Interaction) => {
     const name = interaction.commandName;
     if (commands.has(name)) {
       const command = commands.get(name);
-      if (command) command(interaction);
+      if (command) command.run(interaction);
+    }
+  } else if (interaction.isMessageComponent()) {
+    if (interaction.message.interaction?.type === 'APPLICATION_COMMAND') {
+      const command = commands.get(
+        interaction.message.interaction.commandName
+      ) as EventModule;
+      if (command.sendInteraction) command.sendInteraction(interaction);
     }
   }
 };

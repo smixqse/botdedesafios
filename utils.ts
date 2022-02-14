@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CommandInteraction } from 'discord.js';
+import { CommandInteraction, MessageComponentInteraction } from 'discord.js';
 
 export const getRandomNumberBetween = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -26,6 +26,7 @@ export const removeDuplicatesBy = <A>(
 export interface EventModule {
   data: typeof SlashCommandBuilder;
   run: (interaction: CommandInteraction) => void;
+  sendInteraction?: (interaction: MessageComponentInteraction) => void;
 }
 
 export interface Indexable {

@@ -5,7 +5,7 @@ import enmap from 'enmap';
 const Enmap = require('enmap') as typeof enmap;
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
-const client = new Client({
+export const client = new Client({
   intents: ['GUILDS', 'GUILD_MESSAGES'],
   presence: { status: 'invisible' }
 });

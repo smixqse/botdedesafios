@@ -8,7 +8,7 @@ import {
   Snowflake,
   TextChannel
 } from 'discord.js';
-import { points } from '.';
+import { channelTracking, points } from '.';
 import config from './config';
 import {
   getRandomFrom,
@@ -63,7 +63,7 @@ const interventionChecker = (channel: TextChannel): Intervention | null => {
     creator: channel.guild.members.resolve(config.ownerId) as GuildMember
   };*/
 
-  return null;
+  return channelTracking.get(channel.id)?.nextIntervention || null;
 };
 
 const givePoints = (winners: GuildMember[], amount: number) => {
@@ -300,7 +300,7 @@ const createMessageChallenge = (
   };
 };
 
-interface Challenges extends Object {
+interface Challenges {
   [key: string]: {
     type: ChallengeType;
     messages: {

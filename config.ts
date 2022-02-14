@@ -139,7 +139,7 @@ const fastTypeParts = {
 
 const config = {
   color: '#d49234',
-  challenges: function () {
+  challenges: (function () {
     return {
       enabled: true,
       channels: ['422418934202105858'],
@@ -173,7 +173,7 @@ const config = {
       ]
     }*/
     };
-  },
+  })(),
 
   guildId: '420378219854823424',
   clientId: '471342697232203777',

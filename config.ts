@@ -137,16 +137,17 @@ const fastTypeParts = {
   ]
 };
 
-export default {
+const config = {
   challenges: {
     enabled: true,
     channels: ['422418934202105858'],
     time: 15000,
+    
     winPoints: [25, 50, 75],
     disabledEvents: [],
-    colors: {
-      normal: '#d49234',
-      rare: '#9c229c'
+    colors: function () {
+      return {normal: this.,
+      rare: '#9c229c'}
     },
     interventionMessages: {
       steal: 'mas {0} roubou seus pontos. que pena!',
@@ -175,3 +176,5 @@ export default {
   clientId: '471342697232203777',
   ownerId: '205319106608627722'
 };
+
+export default config;

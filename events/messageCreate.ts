@@ -18,7 +18,6 @@ function chatChallengesHandler(message: Message) {
   });
 
   if (obj.nextMessageCount === obj.messageCount) {
-    // TODO: fazer código que roda o desafio em si aqui
     const normalChallengeNames = Object.entries(challenges)
       .filter((a) => a[1].type === 'normal')
       .map((a) => a[0]);

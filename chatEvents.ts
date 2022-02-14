@@ -64,12 +64,9 @@ const interventionChecker = (channel: TextChannel): Intervention | null => {
   };*/
 
   return null;
-
-  // TODO: pegar intervenção atual no canal na database
 };
 
 const givePoints = (winners: GuildMember[], amount: number) => {
-  // TODO: código de dar pontos pros que ganharam
   for (const winner of winners) {
     points.ensure(winner.id, { points: 0 });
     points.math(winner.id, '+', amount, 'points');

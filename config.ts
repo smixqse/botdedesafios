@@ -155,7 +155,12 @@ export default {
       betNoWinner: 'e {0} perdeu por ter apostado em alguém.'
     },
     fastTypeParts,
-    waitChallengeMinutes: 2
+    waitChallengeMinutes: 2,
+    messagesToWait: {
+      min: 70,
+      max: 400
+    },
+    rarity: 0.3
     // {0} = A ganhou X pontos, A e B ganharam X pontos, ninguém ganhou
     /*genericMessages: {
       won: ['boa! {0}.', 'aí sim! {0}.', 'que rapidez, hein? {0}.'],

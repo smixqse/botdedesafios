@@ -8,3 +8,4 @@ _*.js
 .env
 db
 old
+data

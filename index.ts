@@ -1,7 +1,8 @@
 require('dotenv').config();
 import { Client } from 'discord.js';
 import { Intervention } from './chatEvents';
-import Enmap from 'enmap';
+import enmap from 'enmap';
+const Enmap = require('enmap') as typeof enmap;
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
 const client = new Client({
@@ -9,13 +10,16 @@ const client = new Client({
   presence: { status: 'invisible' }
 });
 
-const channelTracking = new Enmap<
+export const channelTracking = new Enmap<
   string,
   {
     messageCount: number;
+    nextMessageCount: number;
     nextIntervention?: Intervention;
   }
 >({ name: 'channelTracking' });
+
+export const points = new Enmap<string, { points: number }>({ name: 'points' });
 
 (async () => {
   console.log('preparing events...');

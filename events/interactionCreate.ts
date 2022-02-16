@@ -1,4 +1,3 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
 import { Interaction } from 'discord.js';
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
@@ -23,7 +22,7 @@ const event = (interaction: Interaction) => {
     const name = interaction.commandName;
     if (commands.has(name)) {
       const command = commands.get(name);
-      if (command) command.run(interaction);
+      if (command) try {command.run(interaction)} catch (e) {console.log(e)};
     }
   } else if (interaction.isMessageComponent()) {
     if (interaction.message.interaction?.type === 'APPLICATION_COMMAND') {

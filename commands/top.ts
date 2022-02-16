@@ -8,18 +8,18 @@ import {
   MessageEmbedFooter,
   User
 } from 'discord.js';
-import { client, points } from '..';
+import { client, users } from '..';
 import config from '../config';
 
 const buildRanking = async (
   page: number,
   author: User
 ): Promise<InteractionReplyOptions> => {
-  const authorPoints = points.ensure(author.id, {
+  const authorPoints = users.ensure(author.id, {
     points: 0
   });
 
-  const sortedPoints = points
+  const sortedPoints = users
     .map((a, b) => {
       return { ...a, user: b };
     })
@@ -58,7 +58,9 @@ const buildRanking = async (
         return fetchedUser
           ? addWinnerEmojis(
               conditionalBold(
-                `${b + 1 + (page - 1) * 10}º: ${fetchedUser} - ${a.points}`,
+                `${b + 1 + (page - 1) * 10}º: \`${fetchedUser.tag}\` - ${
+                  a.points
+                }`,
                 a.user === author.id
               ),
               page === 1 && b < 3 ? b : null

@@ -1,6 +1,6 @@
 import { GuildMember, Message, TextChannel } from 'discord.js';
 import { channelTracking } from '..';
-import { ChallengeName, challenges, startChallenge } from '../chatEvents';
+import { ChallengeName, challenges, startChallenge } from '../chatChallenges';
 import { getRandomFrom, getRandomNumberBetween } from '../utils';
 import config from './../config';
 

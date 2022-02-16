@@ -33,5 +33,5 @@ export interface Indexable {
   [key: string]: any;
 }
 
-export const wait = (ms: number) =>
+export const promiseWait = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));

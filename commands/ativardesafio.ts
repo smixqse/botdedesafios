@@ -1,7 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { CommandInteraction, GuildMember, TextChannel } from 'discord.js';
-import { ChallengeName, challenges } from '../chatEvents';
-import { startChallenge } from '../chatEvents';
+import { ChallengeName, challenges, startChallenge } from '../chatChallenges';
 import { getRandomFrom, Indexable } from '../utils';
 
 const options: [name: string, value: string][] = Object.keys(challenges).map(
@@ -28,11 +27,15 @@ export default {
       content: `rodando desafio ${challengeToStart}`,
       ephemeral: true
     });
-    startChallenge(
-      challengeToStart as ChallengeName,
-      interaction.channel as TextChannel,
-      interaction.member as GuildMember,
-      (challenges as Indexable)[challengeToStart].run
-    );
+    try {
+      startChallenge(
+        challengeToStart as ChallengeName,
+        interaction.channel as TextChannel,
+        interaction.member as GuildMember,
+        (challenges as Indexable)[challengeToStart].run
+      );
+    } catch (e) {
+      console.log(e);
+    }
   }
 };

@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import {
   CommandInteraction,
   GuildChannel} from 'discord.js';
-import { challenges } from '../chatEvents';
+import { challenges } from '../chatChallenges';
 
 const options: [name: string, value: string][] = Object.keys(challenges).map(
   (a) => [a, a]

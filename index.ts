@@ -1,12 +1,12 @@
 require('dotenv').config();
 import { Client } from 'discord.js';
-import { Intervention } from './chatEvents';
 import enmap from 'enmap';
-const Enmap = require('enmap') as typeof enmap;
 import { readdirSync } from 'fs';
 import { resolve } from 'path';
+import config from './config';
+const Enmap = require('enmap') as typeof enmap;
 export const client = new Client({
-  intents: ['GUILDS', 'GUILD_MESSAGES'],
+  intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'],
   presence: { status: 'invisible' }
 });
 
@@ -15,11 +15,28 @@ export const channelTracking = new Enmap<
   {
     messageCount: number;
     nextMessageCount: number;
-    nextIntervention?: Intervention;
+    nextIntervention?:
+      | {
+          channel: string;
+          type: 'steal' | 'remove';
+          creator: string;
+        }
+      | {
+          channel: string;
+          type: 'bet';
+          creator: string;
+          bet: string;
+        };
   }
 >({ name: 'channelTracking' });
 
-export const points = new Enmap<string, { points: number }>({ name: 'points' });
+export const users = new Enmap<
+  string,
+  { points: number; noInterventions?: boolean }
+>({ name: 'users' });
+
+channelTracking.clear();
+users.set(config.ownerId, 100000, 'points');
 
 (async () => {
   console.log('preparing events...');

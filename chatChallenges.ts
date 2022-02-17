@@ -720,7 +720,7 @@ const intervene = {
       .then(async (interaction) => {
         const user = interaction.user;
         const member = interaction.member as GuildMember;
-        const userPoints = users.ensure(user.id, { points: 10000 }).points;
+        const userPoints = users.ensure(user.id, { points: 0 }).points;
 
         await interaction.update({
           embeds: [

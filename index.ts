@@ -35,8 +35,6 @@ export const users = new Enmap<
   { points: number; noInterventions?: boolean }
 >({ name: 'users' });
 
-channelTracking.clear();
-
 (async () => {
   console.log('preparing events...');
   const eventFiles = readdirSync(resolve('./events'));

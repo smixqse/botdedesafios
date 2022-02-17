@@ -36,7 +36,6 @@ export const users = new Enmap<
 >({ name: 'users' });
 
 channelTracking.clear();
-users.set(config.ownerId, 100000, 'points');
 
 (async () => {
   console.log('preparing events...');

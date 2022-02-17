@@ -174,7 +174,7 @@ const getMessage = (
   }
 };
 
-const createChallengeEmbed = (message: string, type: ChallengeType) => {
+export const createChallengeEmbed = (message: string, type: ChallengeType) => {
   return new MessageEmbed()
     .setColor(config.challenges.colors[type] as ColorResolvable)
     .setDescription(`🎉 | ${message}`);
@@ -687,8 +687,8 @@ const intervene = {
       steal: config.challenges.winPoints[1],
       bet: config.challenges.winPoints[2],
       removeChallenge: config.challenges.winPoints[1],
-      fakeChallenge: config.challenges.winPoints[2] * 5,
-      createChallenge: config.challenges.winPoints[2] * 7
+      fakeChallenge: config.challenges.winPoints[2] * 3,
+      createChallenge: config.challenges.winPoints[2] * 5
     };
 
     const guild = (await client.guilds.fetch(config.guildId)) as Guild;
@@ -720,7 +720,7 @@ const intervene = {
       .then(async (interaction) => {
         const user = interaction.user;
         const member = interaction.member as GuildMember;
-        const userPoints = users.ensure(user.id, { points: 0 }).points;
+        const userPoints = users.ensure(user.id, { points: 10000 }).points;
 
         await interaction.update({
           embeds: [
@@ -862,7 +862,7 @@ const intervene = {
                 (a) => a.id,
                 (await channel.messages.fetch({ limit: 40 }))
                   .map((a) => a.author)
-                  .filter((a) => !a.bot /*  && a.id !== user.id */)
+                  .filter((a) => !a.bot && a.id !== user.id)
               );
               optionInteraction
                 .update({
@@ -953,23 +953,9 @@ const intervene = {
                   const challengeTextMessage =
                     collection.first() as Message<boolean>;
                   challengeTextMessage.delete();
-                  /* followUp.edit({
-                    embeds: [
-                      createChallengeEmbed(
-                        `feito. ${challengeText.content}`,
-                        'rare'
-                      )
-                    ]
-                  }); */
-                  //doneUpdate(optionInteraction);
-                  channelTracking.set(
-                    channel.id,
-                    { type: 'fake', creator: member?.id, channel },
-                    'nextIntervention'
-                  );
                   givePoints([member], -intervPoints.fakeChallenge);
-                  setTimeout(() => {
-                    channel.send({
+                  setTimeout(async () => {
+                    const startMessage = await channel.send({
                       embeds: [
                         createChallengeEmbed(
                           challengeTextMessage.content
@@ -980,8 +966,8 @@ const intervene = {
                       ]
                     });
 
-                    setTimeout(() => {
-                      channel.send({
+                    setTimeout(async () => {
+                      const newMessage = await channel.send({
                         embeds: [
                           createChallengeEmbed(
                             `o desafio era falso, e foi colocado por ${user}. te enganou?`,
@@ -989,8 +975,114 @@ const intervene = {
                           )
                         ]
                       });
+                      const fetchedMessages = await channel.messages.fetch({
+                        after: startMessage.id,
+                        before: newMessage.id,
+                        limit: 30
+                      });
+                      channel.bulkDelete(
+                        fetchedMessages.filter((a) => !!Number(a.content))
+                      );
                     }, 15000);
                   }, 10000);
+                })
+                .catch(() => {
+                  optionInteraction.followUp({
+                    embeds: [createChallengeEmbed('demorou demais!', 'rare')]
+                  });
+                });
+            } else if (option === 'five') {
+              await optionInteraction.update({
+                embeds: [
+                  createChallengeEmbed(
+                    'digite o texto do seu desafio, depois um /, e então a resposta certa do seu desafio.\n\n**exemplo**: qual é o número de cores que tem um arco-íris? / 7',
+                    'rare'
+                  ).setFooter({
+                    text: 'o bot apagará a mensagem na mesma hora, mas você pode evitar que vejam antes da hora ao digitar ||em spoiler||.'
+                  })
+                ],
+                components: []
+              });
+              channel
+                .awaitMessages({
+                  filter: (a) =>
+                    a.author.id === user.id && a.content.includes('/'),
+                  max: 1,
+                  errors: ['time'],
+                  time: 30000
+                })
+                .then(async (collection) => {
+                  const challengeTextMessage =
+                    collection.first() as Message<boolean>;
+                  const replacedContent = challengeTextMessage.content
+                    .replace('||', '')
+                    .replace('||', '');
+                  const [question, answer] = replacedContent.split('/');
+                  challengeTextMessage.delete();
+                  givePoints([member], -intervPoints.createChallenge);
+                  await channel.send({
+                    embeds: [
+                      createChallengeEmbed(
+                        `o próximo desafio foi criado por ${user}!`,
+                        'rare'
+                      )
+                    ]
+                  });
+                  const startMessage = await channel.send({
+                    embeds: [createChallengeEmbed(question, 'rare')]
+                  });
+                  awaitMessages(
+                    channel,
+                    (a) =>
+                      !!Number(answer)
+                        ? a.content.trim() === answer.trim()
+                        : a.content
+                            .toLowerCase()
+                            .includes(
+                              answer.toLowerCase().trim()
+                            ) /* && a.author.id !== user.id */,
+                    (collection) => {
+                      const winner = (collection.first() as Message<boolean>)
+                        .member as GuildMember;
+                        const amount = config.challenges.winPoints[1];
+                      channel.send({
+                        embeds: [
+                          createChallengeEmbed(
+                            `${winner} acertou e ganhou ${amount} pontos! a resposta era \`${answer.trim()}\`.`,
+                            'rare'
+                          )
+                        ]
+                      });
+                      givePoints([winner], amount);
+                    },
+                    () => {
+                      channel.send({
+                        embeds: [
+                          createChallengeEmbed(
+                            `ninguém acertou. a resposta era \`${answer.trim()}\`.`,
+                            'rare'
+                          )
+                        ]
+                      });
+                    },
+                    1,
+                    15000,
+                    async () => {
+                      const fetchedMessages = await channel.messages.fetch({
+                        after: startMessage.id,
+                        limit: 30
+                      });
+                      channel.bulkDelete(
+                        fetchedMessages.filter(
+                          (a) =>
+                            !!Number(a.content) ||
+                            (a.attachments.size < 1 &&
+                              a.embeds.length < 1 &&
+                              a.content.length < 3)
+                        )
+                      );
+                    }
+                  );
                 })
                 .catch(() => {
                   optionInteraction.followUp({

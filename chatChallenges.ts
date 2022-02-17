@@ -1108,13 +1108,87 @@ const intervene = {
   }
 } as ChatChallengeData;
 
+const doNotClick = {
+  type: 'rare',
+  messages: {
+    won: [''],
+    lost: ['']
+  },
+  run: async (challengeName: ChallengeName, channel: TextChannel) => {
+    const winners = removeDuplicatesBy(
+      (a) => a.id,
+      (await channel.messages.fetch({ limit: 10 }))
+        .filter((a) => !a.author.bot)
+        .map((a) => a.member as GuildMember)
+    );
+    const message = await channel.send({
+      embeds: [
+        createChallengeEmbed(
+          `**NÃO CLIQUE NO BOTÃO e os autores das últimas 10 mensagens vão ganhar ${config.challenges.winPoints[0]} pontos.**\n...ou clique e você ganha ${config.challenges.winPoints[1]}.`,
+          challenges[challengeName].type
+        )
+      ],
+      components: [
+        {
+          type: 'ACTION_ROW',
+          components: [
+            { type: 'BUTTON', label: ' ', customId: 'button', style: 'SUCCESS' }
+          ]
+        }
+      ]
+    });
+    message
+      .awaitMessageComponent({ componentType: 'BUTTON', time: 5000 })
+      .then((interaction) => {
+        const winner = interaction.member as GuildMember;
+        interaction.update({
+          embeds: [
+            createChallengeEmbed(
+              `${winner} clicou no botão e ganhou ${config.challenges.winPoints[0]} pontos!`,
+              challenges[challengeName].type
+            )
+          ],
+          components: [
+            {
+              type: 'ACTION_ROW',
+              components: [
+                {
+                  type: 'BUTTON',
+                  label: ' ',
+                  customId: 'button',
+                  style: 'SUCCESS',
+                  disabled: true
+                }
+              ]
+            }
+          ]
+        });
+        givePoints([winner], config.challenges.winPoints[1]);
+      })
+      .catch(() => {
+        channel.send({
+          embeds: [
+            createChallengeEmbed(
+              `ninguém clicou no botão, então ${winners.join(', ')} ${wonWord(
+                winners
+              )} ${config.challenges.winPoints[0]} pontos.`,
+              challenges[challengeName].type
+            )
+          ]
+        });
+        givePoints(winners, config.challenges.winPoints[0]);
+      });
+  }
+} as ChatChallengeData;
+
 export type ChallengeName =
   | 'math'
   | 'luckyNumber'
   | 'alphabet'
   | 'fastType'
   | 'wait'
-  | 'intervene';
+  | 'intervene'
+  | 'doNotClick';
 
 export const challenges = {
   math,
@@ -1122,6 +1196,7 @@ export const challenges = {
   alphabet,
   fastType,
   wait,
-  intervene
+  intervene,
+  doNotClick
   // TODO: resto dos desafios
 } as Challenges;

@@ -35,7 +35,8 @@ function chatChallengesHandler(message: Message) {
     } else {
       const filteredChallenges = obj.nextIntervention
         ? Object.entries(challenges).filter(
-            (a) => !['luckyNumber', 'wait', 'intervene'].includes(a[0])
+            (a) =>
+              !['luckyNumber', 'wait', 'intervene', 'doNotClick'].includes(a[0])
           )
         : Object.entries(challenges);
       const normalChallengeNames = filteredChallenges

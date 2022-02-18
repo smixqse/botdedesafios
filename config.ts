@@ -143,7 +143,7 @@ const config = {
   color,
   challenges: {
     enabled: true,
-    channels: ['422418934202105858'],
+    channels: ['420382037124317184', '823619240569208855'],
     time: 15000,
     winPoints: [25, 50, 75],
     disabledEvents: [],
@@ -160,7 +160,7 @@ const config = {
     fastTypeParts,
     waitChallengeMinutes: 2,
     messagesToWait: {
-      min: 70,
+      min: 50,
       max: 400
     },
     rarity: 0.3
@@ -177,7 +177,13 @@ const config = {
 
   guildId: '420378219854823424',
   clientId: '471342697232203777',
-  ownerId: '205319106608627722'
+  ownerId: '205319106608627722',
+  statusMessages: [
+    { text: 'jogos variados!', type: 'PLAYING' },
+    { text: 'vocês perderem nos desafios!', type: 'WATCHING' },
+    { text: 'vocês conversarem no chat 👀', type: 'WATCHING' }
+  ],
+  statusMessagesInterval: 60000 * 30
 };
 
 export default config;

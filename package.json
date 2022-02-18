@@ -1,7 +1,7 @@
 {
-  "name": "botdocore",
+  "name": "botdedesafios",
   "version": "2.0",
-  "description": "Bot do server do Core feito em Discord.js",
+  "description": "Bot de desafios feito pro servidor do Core feito em Discord.js",
   "main": "index.ts",
   "author": "smixqse",
   "scripts": {

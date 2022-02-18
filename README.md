@@ -1,15 +1,9 @@
-# Bot do Servidor do Core
+este é um bot de desafios feito para o [servidor do Core no Discord](https://discord.gg/core).
 
-Ao fazer pull requests de comandos, siga o exemplo [neste arquivo](https://github.com/smixqse/botdocore/blob/master/commands/command.js.example).
+ele tem desafios rápido que incluem: contas de matemática, descobrir qual é a letra faltando num alfabeto, sorteio de um número, etc.
 
-Para adicionar novos eventos em pull requests, crie um novo arquivo em /events/ com o nome do arquivo sendo o nome do evento (Ex.: guildMemberAdd.js, messageReactionAdd.js) e coloque isso.
+também possui um ranking e um sistema de intervir nesses desafios.
 
-```js
-module.exports = (bot, [...]) => {
-    // O código vem aqui.
-};
-```
+requer node 16 ou superior.
 
-Substitua `[...]` por argumentos que o evento precisa. Ex.: `(module.exports = (bot, messageReaction, user) => {})` (para o evento messageReactionAdd)
-
-Se o arquivo já existe, apenas adicione código nele.
+ignora se o código tiver ruim ou eu tenha feito alguma má prática, mas funciona e eu aprendi fazendo esse projeto :)

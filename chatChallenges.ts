@@ -687,8 +687,8 @@ const intervene = {
       steal: config.challenges.winPoints[1],
       bet: config.challenges.winPoints[2],
       removeChallenge: config.challenges.winPoints[1],
-      fakeChallenge: config.challenges.winPoints[2] * 3,
-      createChallenge: config.challenges.winPoints[2] * 5
+      fakeChallenge: config.challenges.winPoints[2] * 2,
+      createChallenge: config.challenges.winPoints[2] * 3
     };
 
     const guild = (await client.guilds.fetch(config.guildId)) as Guild;
@@ -1138,13 +1138,13 @@ const doNotClick = {
       ]
     });
     message
-      .awaitMessageComponent({ componentType: 'BUTTON', time: 5000 })
+      .awaitMessageComponent({ componentType: 'BUTTON', time: 10000 })
       .then((interaction) => {
         const winner = interaction.member as GuildMember;
         interaction.update({
           embeds: [
             createChallengeEmbed(
-              `${winner} clicou no botão e ganhou ${config.challenges.winPoints[0]} pontos!`,
+              `${winner} clicou no botão e ganhou ${config.challenges.winPoints[1]} pontos! e as últimas pessoas no chat, nenhum.`,
               challenges[challengeName].type
             )
           ],

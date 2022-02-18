@@ -160,8 +160,8 @@ const config = {
     fastTypeParts,
     waitChallengeMinutes: 2,
     messagesToWait: {
-      min: 50,
-      max: 400
+      min: 30,
+      max: 200
     },
     rarity: 0.3
     // {0} = A ganhou X pontos, A e B ganharam X pontos, ninguém ganhou
@@ -176,7 +176,7 @@ const config = {
   },
 
   guildId: '420378219854823424',
-  clientId: '471342697232203777',
+  clientId: '420593871685156864',
   ownerId: '205319106608627722',
   statusMessages: [
     { text: 'jogos variados!', type: 'PLAYING' },

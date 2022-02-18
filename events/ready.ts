@@ -17,6 +17,7 @@ const event = () => {
     };
 
     setInterval(changeStatus, config.statusMessagesInterval);
+    changeStatus();
   });
 };
 

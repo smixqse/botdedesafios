@@ -152,7 +152,7 @@ const deleteChallengeTries = (
 ) => {
   setTimeout(async () => {
     const messages = await channel.messages.fetch({ after: startMessage.id });
-    const filteredMessages = messages.filter(filter);
+    const filteredMessages = messages.filter((m) => filter(m) && m.embeds.length < 1);
     channel.bulkDelete(filteredMessages);
   }, timeout);
 };
@@ -1124,7 +1124,7 @@ const doNotClick = {
     const message = await channel.send({
       embeds: [
         createChallengeEmbed(
-          `**NÃO CLIQUE NO BOTÃO e os autores das últimas 10 mensagens vão ganhar ${config.challenges.winPoints[0]} pontos.**\n...ou clique e você ganha ${config.challenges.winPoints[1]}.`,
+          `**NÃO CLIQUE NO BOTÃO e os autores das últimas 10 mensagens vão ganhar ${config.challenges.winPoints[0]} pontos.**\n...ou clique e você ganha (ou perde) ${config.challenges.winPoints[1]}.`,
           challenges[challengeName].type
         )
       ],
@@ -1141,10 +1141,11 @@ const doNotClick = {
       .awaitMessageComponent({ componentType: 'BUTTON', time: 10000 })
       .then((interaction) => {
         const winner = interaction.member as GuildMember;
+        const pointsToGive = getRandomFrom([config.challenges.winPoints[1], config.challenges.winPoints[1], -config.challenges.winPoints[1]]);
         interaction.update({
           embeds: [
             createChallengeEmbed(
-              `${winner} clicou no botão e ganhou ${config.challenges.winPoints[1]} pontos! e as últimas pessoas no chat, nenhum.`,
+              pointsToGive > 0 ? `${winner} clicou no botão e ganhou ${pointsToGive} pontos! e as últimas pessoas no chat, nenhum.` : `clicou no botão e teve azar! em nome das últimas pessoas no chat, ${winner} perdeu ${-pointsToGive} pontos.`,
               challenges[challengeName].type
             )
           ],
@@ -1163,7 +1164,7 @@ const doNotClick = {
             }
           ]
         });
-        givePoints([winner], config.challenges.winPoints[1]);
+        givePoints([winner], pointsToGive);
       })
       .catch(() => {
         channel.send({

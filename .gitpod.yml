@@ -4,6 +4,6 @@
 
 tasks:
   - init: npm install && cp config.sample.ts config.ts && touch .env
-    command: npm run start
+    command: npm run dstart
 
 

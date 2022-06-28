@@ -1,6 +1,6 @@
 
 node_modules/
-/config.json
+config.ts
 /nodemon.json
 /package-lock.json
 _*.js
